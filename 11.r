@@ -1,6 +1,8 @@
 
-pre.post.cont <- function(n1 = 12, n2 = 12, min.score = 0, max.score = 25, subjects = TRUE, 
-                  descriptives = TRUE, correlation = .7, effect.size = 1, digits = 6, ...){
+source("https://raw.githubusercontent.com/rnorouzian/i/master/i.r")
+
+pre.post.cont <- function(n1 = 12, n2 = 12, min.score = 0, max.score = 25, subjects = TRUE, conf.level = .95,
+                          descriptives = TRUE, correlation = .7, effect.size = 1, digits = 6, ...){
   
   decimal <- function(x, k){
     if(is.character(x)){ x 
@@ -126,8 +128,9 @@ pre.post.cont <- function(n1 = 12, n2 = 12, min.score = 0, max.score = 25, subje
   dimnames(m) = list("PRE-POST-CONTROL DESIGN:" = c("", ""), c(rep("", 8)))
   m <- noquote(m)
   
-  test <- data.frame(test[1:3], row.names = "result:")
-  colnames(test) <- c("t.value", "df", "p.value")
+  u = d.ci(t = test[[1]], n1 = n1, n2 = n2, conf.level = conf.level, digits = digits)
+  test <- data.frame(test[1:3], Cohend, u[2], u[3], row.names = "result:")
+  colnames(test) <- c("t.value", "df", "p.value", "cohen.d", "d.lower", "d.upper")
   print(list(m, test), digits = digits)
 }
 # EXAMPLE OF USE:
