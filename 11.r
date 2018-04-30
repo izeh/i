@@ -129,8 +129,8 @@ pre.post.cont <- function(n1 = 12, n2 = 12, min.score = 0, max.score = 25, subje
   m <- noquote(m)
   
   u = d.ci(t = test[[1]], n1 = n1, n2 = n2, conf.level = conf.level, digits = digits)
-  test <- data.frame(test[1:3], Cohend, u[2], u[3], row.names = "result:")
-  colnames(test) <- c("t.value", "df", "p.value", "cohen.d", "d.lower", "d.upper")
+  test <- data.frame(test[1:3], Cohend, u[2], u[3], u[4], row.names = "result:")
+  colnames(test) <- c("t.value", "df", "p.value", "cohen.d", "d.lower", "d.upper", "conf.level")
   print(list(m, test), digits = digits)
 }
 # EXAMPLE OF USE:
