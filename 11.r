@@ -83,14 +83,14 @@ pre.post.cont <- function(n1 = 12, n2 = 12, min.score = 0, max.score = 25, subje
   
   if(subjects) {
     graphics.off()
-    par(font.lab = 2, mar = c(4.2, 3, 2, 4), xaxt = "n", ...)
+    par(font.lab = 2, mar = c(4.2, 2, 2, 2), xaxt = "n", ...)
     dotchart(y, groups = groups, color = c(4, 2)[groups], 
              font = 2, pch = 19, gcolor = c(4, 2), xlab = "Participants' Gain Scores",
              pt.cex = ifelse(n1 <= 20 || n2 <= 20, 1.5, .8), labels = c(lab1, lab2), main = NA,
              cex.main = 2) 
   } else {
     graphics.off()
-    par(font.lab = 2, mar = c(4.2, 3, 2, 4), xaxt = "n", ...)
+    par(font.lab = 2, mar = c(4.2, 2, 2, 2), xaxt = "n", ...)
     dotchart(y, groups = groups, color = c(4, 2)[groups], 
              font = 2, pch = 19, gcolor = c(4, 2), xlab = "Participants' Gain Scores",
              pt.cex = ifelse(n1 <= 20 || n2 <= 20, 1.5, .8), labels = NA, main = NA)
