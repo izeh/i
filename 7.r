@@ -1,6 +1,6 @@
-source("https://raw.githubusercontent.com/izeh/i/master/i.r")
+source("https://raw.githubusercontent.com/rnorouzian/i/master/i.r")
          C = beta.id(.6, .8, .6)
-     prior = function(x) dbeta(x, C[1,], C[2,]) 
+     prior = function(x) dbeta(x, C$a, C$b) 
 likelihood = function(x) dbinom(55, 100, x)
  posterior = function(x) prior(x)*likelihood(x)
        
