@@ -10,7 +10,7 @@ CI = HDI(posterior)
                     xlab = "Proportion of preference for (B)", ylab = NA, font.lab = 2)$y
   
   axis(1, at = c(0, .2, .4, .7, .85, 1), labels = paste0(c(0, .2, .4, .7, .85, 1)*1e2, "%"), font = 2)
-  mode = optimize(posterior, interval = 0:1, maximum = TRUE, tol = 1e-12)[[1]]
+  mode = optimize(posterior, interval = 0:1, maximum = TRUE)[[1]]
   axis(1, at = mode, labels = paste0(round(mode, 4)*1e2, "%"), font = 2, col = 2, col.axis = 2)
   segments(mode, 0, mode, max(Posterior), lty = 3, col = "darkgreen")
 
