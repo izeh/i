@@ -1,9 +1,9 @@
-     source("https://raw.githubusercontent.com/izeh/i/master/i.r")
+     source("https://raw.githubusercontent.com/rnorouzian/i/master/i.r")
          C = beta.id(.6, .8, .6)
-     prior = function(x) dbeta(x, C[1,], C[2,]) 
+     prior = function(x) dbeta(x, C$a, C$b) 
 likelihood = function(x) dbinom(55, 100, x)
  posterior = function(x) prior(x)*likelihood(x)
-      mode = optimize(posterior, interval = 0:1, maximum = TRUE, tol = 1e-12)[[1]]
+      mode = optimize(posterior, interval = 0:1, maximum = TRUE)[[1]]
 
  par(mfcol = c(1, 3), mar = c(5, .4, 15, .1), xpd = NA, yaxt = "n", bty = "n", yaxs = "i", lwd = 2, las = 1, font.lab = 2, font = 2)
  
