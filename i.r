@@ -1,4 +1,5 @@
 
+
 #==================================================================================================================
 
 HDI <- function(FUN, lower = 0, upper = 1, level = .95, eps = 1e-3)
@@ -526,7 +527,7 @@ prop.bayes.default <- function(a = 1.2, b = 1.2, lo = 0, hi = 1, dist.name = "db
     
     legend(x = leg, legend = rev(paste0(substring(d, 2), "(", round(a, 2), ", ", round(b, 2), ")")), 
            pch = 22, title = "Priors", pt.bg = rev(col), col = rev(col), cex = .7, pt.cex = .6, bg = 0, 
-           box.col = 0, xpd = NA, x.intersp = .5, title.adj = .4)
+           box.col = 0, xpd = NA, x.intersp = .5, title.adj = .4, adj = c(0, .3))
     box()
     segments(CI[, 1], 1:loop, CI[, 2], 1:loop, lend = 1, lwd = 4, col = col, xpd = NA)
     m = scale*peak + 1:loop
@@ -1061,11 +1062,11 @@ d.bayes.default <- function(t, n1, n2 = NA, m = 0, s = 1, level = .95, lo = -Inf
     a = scale*(f-1:loop)+1:loop
     
     col <- if(is.null(col.hump)) 1:loop else col.hump 
-    legend(x = leg, legend = rev(paste0(substring(d, 2), "(", round(m, 2), ", ", round(s, 2), ")")), pch = 22, title = "Priors", pt.bg = rev(col), col = rev(col), cex = .7, pt.cex = .6, bg = 0, box.col = 0, xpd = NA, x.intersp = .5, title.adj = .4)
+    legend(x = leg, legend = rev(paste0(substring(d, 2), "(", round(m, 2), ", ", round(s, 2), ")")), pch = 22, title = "Priors", pt.bg = rev(col), col = rev(col), cex = .7, pt.cex = .6, bg = 0, box.col = 0, xpd = NA, x.intersp = .5, title.adj = .4, adj = c(0, .3))
     box()  
     segments(CI[, 1], 1:loop, CI[, 2], 1:loop, lend = 1, lwd = 4, col = col, xpd = NA)                         
     segments(mode, 1:loop, mode, a, lty = 3, xpd = NA, lend = 1)
-    points(mode, 1:loop, pch = 21, bg = "cyan", cex = 1.1, col = "magenta", xpd = NA)
+    points(mode, 1:loop, pch = 21, bg = "cyan", cex = 1.3, col = "magenta", xpd = NA)
     I = deci(CI) ; o = deci(mode)
     text(c(CI[,1], o, CI[,2]), 1:loop, c(I[,1], o, I[,2]), pos = 3, font = 2, cex = .8, xpd = NA)
     
@@ -1364,7 +1365,7 @@ peta.bayes.default <- function(f, N, df1, df2, a = 1.2, b = 1.2, level = .95, lo
     }
     m = scale*peak + 1:loop
     col <- if(is.null(col.hump)) 1:loop else col.hump
-    legend(x = leg, legend = rev(paste0(substring(d, 2), "(", round(a, 2), ", ", round(b, 2), ")")), pch = 22, title = "Priors", pt.bg = rev(col), col = rev(col), cex = .7, pt.cex = .6, bg = 0, box.col = 0, xpd = NA, x.intersp = .5, title.adj = .4)
+    legend(x = leg, legend = rev(paste0(substring(d, 2), "(", round(a, 2), ", ", round(b, 2), ")")), pch = 22, title = "Priors", pt.bg = rev(col), col = rev(col), cex = .7, pt.cex = .6, bg = 0, box.col = 0, xpd = NA, x.intersp = .5, title.adj = .4, adj = c(0, .3))
     box()
     segments(CI[, 1], 1:loop, CI[, 2], 1:loop, lend = 1, lwd = 4, col = col, xpd = NA)                   
     segments(mode, 1:loop, mode, m, lty = 3, xpd = NA, lend = 1)  
@@ -1649,7 +1650,7 @@ cor.bayes.default <- function(r, n, prior.mean = 0, prior.sd = .707, eq.bound = 
     
     m = scale*peak + 1:loop
     col <- if(is.null(col.hump)) 1:loop else col.hump
-    legend(x = leg, legend = rev(paste0("s.norm", "(", round(prior.mean, 2), ", ", round(prior.sd, 2), ")")), pch = 22, title = "Priors", pt.bg = rev(col), col = rev(col), cex = .7, pt.cex = .6, bg = 0, box.col = 0, xpd = NA, x.intersp = .5, title.adj = .4)
+    legend(x = leg, legend = rev(paste0("s.norm", "(", round(prior.mean, 2), ", ", round(prior.sd, 2), ")")), pch = 22, title = "Priors", pt.bg = rev(col), col = rev(col), cex = .7, pt.cex = .6, bg = 0, box.col = 0, xpd = NA, x.intersp = .5, title.adj = .4, adj = c(0, .3))
     box()
     segments(CI[, 1], 1:loop, CI[, 2], 1:loop, lend = 1, lwd = 4, col = col, xpd = NA)                            
     segments(mode, 1:loop, mode, m, lty = 3, xpd = NA, lend = 1)  
@@ -2277,7 +2278,7 @@ lab <- if(any(is.na(labels))) paste0("Model ", 1:loop) else labels
 axis(1, at = seq(a, b, length.out = 4), labels = paste0(round(seq(a, b, length.out = 4), 4)*1e2, "%"), mgp = c(2, .5, 0))
 axis(2, at = 1:loop, labels = lab, font = 2, las = 1, cex.axis = cex.lab, tck = -.006, mgp = c(2, .3, 0))
 
-legend(x = leg, legend = rev(paste0("Model ", loop:1)), pch = 22, title = "Models ", pt.bg = loop:1, col = loop:1, cex = .7, pt.cex = .6, bg = 0, box.col = 0, xpd = NA, x.intersp = .5)
+legend(x = leg, legend = rev(paste0("Model ", loop:1)), pch = 22, title = "Models ", pt.bg = loop:1, col = loop:1, cex = .7, pt.cex = .6, bg = 0, box.col = 0, xpd = NA, x.intersp = .5, adj = c(0, .3))
 segments(I[, 1], 1:loop, I[, 2], 1:loop, lend = 1, lwd = 4, col = 1:loop, xpd = NA)
 box()
 
@@ -2435,7 +2436,7 @@ predict.bayes <- function(fit, xlab = NA, ylab = NA, level = .95, line.int = TRU
 predict.bayes.default <- function(fit, xlab = NA, ylab = NA, level = .95, line.int = TRUE, pred.int = TRUE, pt.cex = 1, pt.col = 4, col.depth = .3, col.line = "cyan", col.pred = "gray", col.reg = "cyan", ...){
   
   if(class(fit)[1] != "stanreg") stop("Error: 'fit' must be from package 'rstanarm's 'stan_glm()'.")  
-  if(length(coef(fit)) > 2) stop("Error: 'fit' must contain only 'one' predictor. Consider using 'count.plot()' for multiple predictors.")
+  if(length(coef(fit)) > 2) stop("Error: 'fit' must contain only 'one' predictor. Consider using 'counter.plot()' for multiple predictors.")
   
   pred <- fit$model[, 2]
   dep <- fit$model[, 1]  
@@ -2719,7 +2720,7 @@ type.sm.default <- function(d = .1, obs.d = .6, n1 = 20, n2 = NA, digits = 6){
   
   points(obs.d, 0, pch = 23, bg = 3, cex = 1.4, xpd = TRUE)
   
-  legend("topright", "Observed \nS.S. Effect", pch = 23, pt.bg = 3, pt.cex = 1.2, bty = "n", text.font = 2)   
+  legend("topright", "Observed \nS.S. Effect", pch = 23, pt.bg = 3, pt.cex = 1.2, bty = "n", text.font = 2, adj = c(0, .3))   
   abline(v = 0, col = 2, xpd = FALSE) 
   
   par(mar = c(5, 4, 1, 2))
@@ -2984,14 +2985,14 @@ if(!inherits(fit.data, "data.frame") || ncol(fit.data) < 2) stop("Error: 'fit.da
 #=========================================================================================================
               
  
-count.plot <- function(fit, xlab = NA, ylab = NA, line.int = TRUE, pred.int = TRUE, level = .95,
+counter.plot <- function(fit, xlab = NA, ylab = NA, line.int = TRUE, pred.int = TRUE, level = .95,
                        focus.pred, n = 2e2, FUN = mean, hold.at = NA, legend = "topleft", ...)
 {
-  UseMethod("count.plot")
+  UseMethod("counter.plot")
 }
 
 
-count.plot.default <- function(fit, xlab = NA, ylab = NA, line.int = TRUE, pred.int = TRUE, level = .95,
+counter.plot.default <- function(fit, xlab = NA, ylab = NA, line.int = TRUE, pred.int = TRUE, level = .95,
                                focus.pred, n = 2e2, FUN = mean, hold.at = NA, legend = "topleft", ...){
   
 if(class(fit)[1] != "stanreg") stop("Error: 'fit' must be from package 'rstanarm's 'stan_glm()'.")  
@@ -3480,3 +3481,134 @@ dens.plot.default <- function(x, adjust = 1, na.rm = TRUE, n = 1e3, from = min(x
 }
 
                 
+#===================================================================================================================
+                
+                
+count.plot <- function(x, ylab = NA, freq = FALSE, ...)
+{
+  UseMethod("count.plot")
+}
+
+                
+count.plot.default <- function(x, ylab = NA, freq = FALSE, ...) 
+{
+  x <- round(x)
+  ylab <- if(is.na(ylab) & freq) "Frequency" else if(is.na(ylab) & !freq) "Probability" else ylab
+  z <- if(freq) table(x) else table(x)/length(x)
+  plot(z, ylab = ylab, ...)
+}
+                
+                
+#=========================================================================================================================
+                
+                
+dbetabinom <- function (x, size, mu, dis, shape1 = NULL, shape2 = NULL, log = FALSE) 
+{
+  if(missing(mu) && !is.null(shape1) && !is.null(shape2)){
+    mu <- shape1/sum(shape1, shape2)
+    dis <- sum(shape1, shape2)
+  }
+    
+  if(mu < 0 || mu > 1) message("Error: 'mu' is 'average probability' of a 'beta dist.' bound between '0' & '1'.")
+    
+  h <- lfactorial(size) - lfactorial(x) - lfactorial(size - 
+      x) - lbeta(dis * (1 - mu), dis * mu) + lbeta(size - 
+      x + dis * (1 - mu), x + dis * mu)
+  na.int <- function(x) (abs((x) - floor((x) + 0.5)) > 1e-7)
+  if(any(n <- na.int(x))){
+    warning("non-integer 'x' found. \"zero\" probability is returned.")
+    h[n] <- -Inf
+  }
+  if(log) h else exp(h)
+}
+    
+    
+#==============================================================================================================================
+    
+    
+dbetab <- function (x, mu, dis, log = FALSE) 
+{
+if(mu < 0 || mu > 1) message("Error: 'mu' is 'average probability' of a 'beta dist.' bound between '0' & '1'.")
+  shape1 <- mu * dis
+  shape2 <- (1 - mu) * dis
+  dbeta(x, shape1 = shape1, shape2 = shape2, log = log)
+}
+    
+
+#=================================================================================================================================
+    
+    
+rbetab <- function(n, mu, dis){
+  
+if(mu < 0 || mu > 1) message("Error: 'mu' is 'average probability' of a 'beta dist.' bound between '0' & '1'.")
+  shape1 <- mu * dis
+  shape2 <- (1 - mu) * dis
+  rbeta(n, shape1 = shape1, shape2 = shape2)
+}
+    
+    
+#====================================================================================================================================
+    
+    
+rbetabinom <- function (n, size, mu, dis, shape1 = NULL, shape2 = NULL) 
+{
+  if(missing(mu) && !is.null(shape1) && !is.null(shape2)){
+    mu <- shape1/sum(shape1, shape2)
+    dis <- sum(shape1, shape2)
+  } 
+if(mu < 0 || mu > 1) message("Error: 'mu' is 'average probability' of a 'beta dist.' bound between '0' & '1'.")
+    
+  rbinom(n, size, rbetab(n, mu, dis))
+}
+    
+    
+#=======================================================================================================================================
+    
+  
+ dcohen <- function(x, dbase, n1, n2 = NA, log = FALSE){
+  
+  N <- ifelse(is.na(n2), n1, (n1 * n2)/(n1 + n2))
+  df <- ifelse(is.na(n2), n1 - 1, (n1 + n2) - 2)
+  ncp <- dbase*sqrt(N)
+  
+  dt(x*sqrt(N), df, ncp, log = log)*sqrt(N)
+}
+
+#=======================================================================================================================================
+
+
+qcohen <- function(p, dbase, n1, n2 = NA, lower.tail = TRUE, log.p = FALSE){
+  
+  N <- ifelse(is.na(n2), n1, (n1 * n2)/(n1 + n2))
+  df <- ifelse(is.na(n2), n1 - 1, (n1 + n2) - 2)
+  ncp <- dbase*sqrt(N)
+  
+  qt(p, df, ncp, lower.tail = lower.tail, log.p = log.p)/sqrt(N)
+}
+
+    
+#=======================================================================================================================================
+
+
+pcohen <- function(q, dbase, n1, n2 = NA, lower.tail = TRUE, log.p = FALSE){
+  
+ N <- ifelse(is.na(n2), n1, (n1 * n2)/(n1 + n2))
+ df <- ifelse(is.na(n2), n1 - 1, (n1 + n2) - 2)
+ ncp <- dbase*sqrt(N)
+ 
+ pt(q*sqrt(N), df, ncp, lower.tail = lower.tail, log.p = log.p)
+}
+
+    
+#=======================================================================================================================================
+
+
+rcohen <- function(n, dbase, n1, n2 = NA){
+  
+  N <- ifelse(is.na(n2), n1, (n1 * n2)/(n1 + n2))
+  df <- ifelse(is.na(n2), n1 - 1, (n1 + n2) - 2)
+  ncp <- dbase*sqrt(N)
+  
+  rt(n, df, ncp)/sqrt(N)
+}
+    
