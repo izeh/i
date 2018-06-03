@@ -80,7 +80,7 @@ hdir <- function(sample, level = .95)
 hdir.default <- function(sample, level = .95){
   
   if(1 <= level || level <= 0) stop("Error: 'level' must be between '0' and '1'.")
-  if(length(sample) < 1e3) message("Warning: \n\tInsufficient sample to produce reliable 'interval' estimates.")  
+  #if(length(sample) < 1e3) message("Warning: \n\tInsufficient sample to produce reliable 'interval' estimates.")  
   sorted <- sort(sample)
   index <- ceiling(level*length(sorted))
   n <- length(sorted)- index
@@ -2481,7 +2481,7 @@ predict.bayes.default <- function(fit, xlab = NA, ylab = NA, level = .95, line.i
     polygon(c(rev(x), x), c(rev(z), y), col = adjustcolor(col.line, col.depth), border = NA)
   }
   
-  abline(fit, col = col.reg, lwd = 2)
+  abline(fit, col = col.reg, lwd = 2, lend = 1)
   box()    
 }                                              
                        
@@ -3496,69 +3496,177 @@ count.plot.default <- function(x, ylab = NA, freq = FALSE, ...)
   ylab <- if(is.na(ylab) & freq) "Frequency" else if(is.na(ylab) & !freq) "Probability" else ylab
   z <- if(freq) table(x) else table(x)/length(x)
   plot(z, ylab = ylab, ...)
+  invisible(list(x = as.numeric(names(z)), y = as.numeric(z)))
 }
                 
                 
 #=========================================================================================================================
+
+not.integer <- function(x) (abs((x) - floor((x) + .5)) > 1e-7)  
+
+#=========================================================================================================================
                 
-                
-dbetabinom <- function (x, size, mu, dis, shape1 = NULL, shape2 = NULL, log = FALSE) 
+dbetabinom <- function (x, size, mu.p, disp, shape1 = NULL, shape2 = NULL, log = FALSE) 
 {
-  if(missing(mu) && !is.null(shape1) && !is.null(shape2)){
-    mu <- shape1/sum(shape1, shape2)
-    dis <- sum(shape1, shape2)
+  if(missing(mu.p) && !is.null(shape1) && !is.null(shape2)){
+    mu.p <- shape1/(shape1 + shape2)
+    disp <- shape1 + shape2
   }
     
-  if(mu < 0 || mu > 1) message("Error: 'mu' is 'average probability' of a 'beta dist.' bound between '0' & '1'.")
-    
-  h <- lfactorial(size) - lfactorial(x) - lfactorial(size - 
-      x) - lbeta(dis * (1 - mu), dis * mu) + lbeta(size - 
-      x + dis * (1 - mu), x + dis * mu)
-  na.int <- function(x) (abs((x) - floor((x) + 0.5)) > 1e-7)
-  if(any(n <- na.int(x))){
-    warning("non-integer 'x' found. \"zero\" probability is returned.")
-    h[n] <- -Inf
+if(mu.p < 0 || mu.p > 1) { message("Warning: 'mu.p' is 'average probability' of a 'beta dist.' bound between '0' & '1'.") ;
+mu.p[mu.p < 0] <- 0 ;
+mu.p[mu.p > 1] <- 1 }   
+  
+t <- disp * mu.p
+u <- disp * (1 - mu.p)
+h <- lbeta(x + t, size - x + u) - lbeta(t, u) + lchoose(size, x)
+  
+  if(any(g <- not.integer(x))){
+    message("Warning: For non-integer 'x' (successes), probability of \"ZERO\" is returned.")
+    h[g] <- -Inf
   }
   if(log) h else exp(h)
 }
-    
-    
+
+
 #==============================================================================================================================
+
+
+dbetab <- function (x, mu.p, disp, log = FALSE){
+
+if(mu.p < 0 || mu.p > 1) { message("Warning: 'mu.p' is 'average probability' of a 'beta dist.' bound between '0' & '1'.") ;
+mu.p[mu.p < 0] <- 0 ;
+mu.p[mu.p > 1] <- 1 }
     
-    
-dbetab <- function (x, mu, dis, log = FALSE) 
-{
-if(mu < 0 || mu > 1) message("Error: 'mu' is 'average probability' of a 'beta dist.' bound between '0' & '1'.")
-  shape1 <- mu * dis
-  shape2 <- (1 - mu) * dis
+  shape1 <- mu.p * disp
+  shape2 <- (1 - mu.p) * disp
   dbeta(x, shape1 = shape1, shape2 = shape2, log = log)
+}
+
+    
+#=================================================================================================================================
+
+    
+qbetab <- function(p, mu.p, disp, lower.tail = TRUE, log.p = FALSE){
+
+if(mu.p < 0 || mu.p > 1) { message("Warning: 'mu.p' is 'average probability' of a 'beta dist.' bound between '0' & '1'.") ;
+mu.p[mu.p < 0] <- 0 ;
+mu.p[mu.p > 1] <- 1 }
+    
+  shape1 <- mu.p * disp
+  shape2 <- (1 - mu.p) * disp
+  qbeta(p, shape1 = shape1, shape2 = shape2, lower.tail = lower.tail, log.p = log.p)
 }
     
 
-#=================================================================================================================================
+#===========================================================================================================
+
+
+pbetab <- function(q, mu.p, disp, lower.tail = TRUE, log.p = FALSE){
     
+if(mu.p < 0 || mu.p > 1) { message("Warning: 'mu.p' is 'average probability' of a 'beta dist.' bound between '0' & '1'.") ;
+mu.p[mu.p < 0] <- 0 ;
+mu.p[mu.p > 1] <- 1 }
     
-rbetab <- function(n, mu, dis){
+  shape1 <- mu.p * disp
+  shape2 <- (1 - mu.p) * disp
+  pbeta(q, shape1 = shape1, shape2 = shape2, lower.tail = lower.tail, log.p = log.p)
+}
+
+
+#==================================================================================================================    
+
+pbetabinom <- function(q, size, mu.p, disp){
   
-if(mu < 0 || mu > 1) message("Error: 'mu' is 'average probability' of a 'beta dist.' bound between '0' & '1'.")
-  shape1 <- mu * dis
-  shape2 <- (1 - mu) * dis
-  rbeta(n, shape1 = shape1, shape2 = shape2)
+  k <- eq(q, size, mu.p, disp)
+  q <- k[[1]] ; size <- k[[2]] ; mu.p <- k[[3]] ; disp <- k[[4]]
+ 
+if(mu.p < 0 || mu.p > 1) { message("Warning: 'mu.p' is 'average probability' of a 'beta dist.' bound between '0' & '1'.") ;
+mu.p[mu.p < 0] <- 0 ;
+mu.p[mu.p > 1] <- 1 }
+    
+  if(any(g <- not.integer(q))){
+    message("Warning: For non-integer 'q' (successes),  'q' is rounded.")
+    q[g] <- round(q)
+  }
+  
+  t <- disp * mu.p
+  u <- disp * (1 - mu.p)
+  
+  prob <- numeric(length(q))
+  for (i in 1:length(q)){
+    h <- 0:q[i]
+    prob[i] <- sum(exp(lbeta(h + t[i], size[i] - h + u[i]) - lbeta(t[i], u[i]) + lchoose(size[i], h)))
+  }
+  prob
+}
+
+
+#==========================================================================================================
+
+
+qbetabinom <- function(p, size, mu.p, disp){
+
+k <- eq(p, size, mu.p, disp)
+p <- k[[1]] ; size <- k[[2]] ; mu.p <- k[[3]] ; disp <- k[[4]]
+
+if(mu.p < 0 || mu.p > 1) { message("Warning: 'mu.p' is 'average probability' of a 'beta dist.' bound between '0' & '1'.") ;
+mu.p[mu.p < 0] <- 0 ;
+mu.p[mu.p > 1] <- 1 }
+    
+p[p < 0] <- 0
+p[p > 1] <- 1
+    
+h <- function(g) {
+  t <- disp[i] * mu.p[i]
+  u <- disp[i] * (1 - mu.p[i])
+  d <- 0:g
+  sum(exp(lbeta(d + t, size[i] - d + u) - lbeta(t, u) + 
+            lchoose(size[i], d))) - p[i]
+}
+
+qs <- numeric(length(p))
+
+for(i in 1:length(p)){
+  interval <- c(0, size[i])
+  qs[i] <- if(h(interval[1]) * h(interval[2]) > 0) 
+    0
+  else uniroot(h, interval)[[1]]
+}
+round(qs)
 }
     
     
 #====================================================================================================================================
+
     
+rbetab <- function(n, mu.p, disp){
+  
+if(mu.p < 0 || mu.p > 1) { message("Warning: 'mu.p' is 'average probability' of a 'beta dist.' bound between '0' & '1'.") ;
+mu.p[mu.p < 0] <- 0 ;
+mu.p[mu.p > 1] <- 1 }
     
-rbetabinom <- function (n, size, mu, dis, shape1 = NULL, shape2 = NULL) 
-{
-  if(missing(mu) && !is.null(shape1) && !is.null(shape2)){
-    mu <- shape1/sum(shape1, shape2)
-    dis <- sum(shape1, shape2)
+  shape1 <- mu.p * disp
+  shape2 <- (1 - mu.p) * disp
+  rbeta(n, shape1 = shape1, shape2 = shape2)
+}
+
+
+#====================================================================================================================================
+
+
+rbetabinom <- function(n, size, mu.p, disp, shape1 = NULL, shape2 = NULL){
+    
+  if(missing(mu.p) && !is.null(shape1) && !is.null(shape2)){
+    mu.p <- shape1/(shape1 + shape2)
+    disp <- shape1 + shape2
   } 
-if(mu < 0 || mu > 1) message("Error: 'mu' is 'average probability' of a 'beta dist.' bound between '0' & '1'.")
     
-  rbinom(n, size, rbetab(n, mu, dis))
+if(mu.p < 0 || mu.p > 1) { message("Warning: 'mu.p' is 'average probability' of a 'beta dist.' bound between '0' & '1'.") ;
+mu.p[mu.p < 0] <- 0 ;
+mu.p[mu.p > 1] <- 1 }
+
+  rbinom(n, size, rbetab(n, mu.p, disp))
 }
     
     
@@ -3612,3 +3720,64 @@ rcohen <- function(n, dbase, n1, n2 = NA){
   rt(n, df, ncp)/sqrt(N)
 }
     
+    
+#=========================================================================================================================================
+    
+    
+dpeta <- function(x, df1, df2, pbase, N, log = FALSE){
+  x[x > .9999999999999999] <- .9999999999999999
+  x[x < 0] <- 0
+  pbase[pbase > .9999999999999999] <- .9999999999999999
+  pbase[pbase < 0] <- 0
+  ncp <- (pbase * N) / (1 - pbase)
+  d <- df2 / df1
+  f <- x / (1 - x) * d
+  df(f, df1, df2, ncp, log = log) * d * ( 1 / (1 - x) + x / (1 - x)^2 )
+}
+
+
+#=========================================================================================================================================
+
+
+ppeta <- function(q, df1, df2, pbase, N, lower.tail = TRUE, log.p = FALSE){
+  q[q > .9999999999999999] <- .9999999999999999
+  q[q < 0] <- 0
+  pbase[pbase > .9999999999999999] <- .9999999999999999
+  pbase[pbase < 0] <- 0
+  ncp <- (pbase * N) / (1 - pbase)
+  d <- df2 / df1
+  f <- q / (1 - q) * d
+  pf(f, df1, df2, ncp, lower.tail = lower.tail, log.p = log.p)
+}
+
+
+#=========================================================================================================================================
+
+
+qpeta <- function(p, df1, df2, pbase, N, lower.tail = TRUE, log.p = FALSE){
+  p[p > 1] <- 1
+  p[p < 0] <- 0
+  pbase[pbase > .9999999999999999] <- .9999999999999999
+  pbase[pbase < 0] <- 0
+  ncp <- (pbase * N) / (1 - pbase)
+  d <- df2 / df1
+  f <- qf(p, df1, df2, ncp, lower.tail = lower.tail, log.p = log.p)
+  f / (f + d)
+}
+
+
+#=========================================================================================================================================
+
+
+rpeta <- function(n, df1, df2, pbase, N){
+  pbase[pbase > .9999999999999999] <- .9999999999999999
+  pbase[pbase < 0] <- 0
+  ncp <- (pbase * N) / (1 - pbase)
+  d <- df2 / df1
+  f <- rf(n, df1, df2, ncp)
+  f / (f + d)
+}
+    
+    
+    
+
