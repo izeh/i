@@ -1,3 +1,5 @@
+source("https://raw.githubusercontent.com/rnorouzian/i/master/i.r")
+
 d.CI.sim <- function(d = .5, n1 = 30, n2 = NA, conf.level = .95, n.sim = 5, ylabel = TRUE){
 
 fun <- function(){ 
