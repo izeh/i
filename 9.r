@@ -1,6 +1,6 @@
 source("https://raw.githubusercontent.com/rnorouzian/i/master/i.r")
 
-d.CI.sim <- function(d = .5, n1 = 30, n2 = NA, conf.level = .95, n.sim = 5, ylabel = TRUE){
+d.ci.sim <- function(d = .5, n1 = 30, n2 = NA, conf.level = .95, n.sim = 5, ylabel = TRUE){
 
 fun <- function(){ 
   
@@ -22,3 +22,6 @@ points(sim[, 3], 1:n.sim, pch = 19, col = ifelse(capture, 1, 2), cex = ifelse(n.
 
 cat(paste0("\t", "Coverage = ", mean(capture)*1e2, "%")) 
 }
+
+# Example of use:
+d.ci.sim(d = .5, n1 = 30, n2 = NA, n.sim = 20)
