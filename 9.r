@@ -22,6 +22,5 @@ points(sim[, 3], 1:n.sim, pch = 19, col = ifelse(capture, 1, 2), cex = ifelse(n.
 
 cat(paste0("\t", "Coverage = ", mean(capture)*1e2, "%")) 
 }
-
 # Example of use:
 d.ci.sim(d = .5, n1 = 30, n2 = NA, n.sim = 20)
