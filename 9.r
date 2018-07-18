@@ -2,8 +2,7 @@ source("https://raw.githubusercontent.com/rnorouzian/i/master/i.r")
 
 d.ci.sim <- function(d = .5, n1 = 30, n2 = NA, conf.level = .95, n.sim = 5, ylabel = TRUE){
 
-fun <- function(){ 
-  
+fun <- function(){  
   ds <- rcohen(1, dbase = d, n1 = n1, n2 = n2)
   c(CI = as.numeric(d.ci(d = ds, n1 = n1, n2 = n2, conf.level = conf.level)[,2:3]), ds = ds)
 }
