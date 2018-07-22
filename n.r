@@ -8,12 +8,22 @@ suppressMessages({
   library("gsl")
 })
 
+F2peta <- function(F.value, df1, df2) (F.value*df1) / ((F.value*df1) + df2)
 
 peta2F <- function(peta, df1, df2) (peta / df1) / ((1 - peta)/df2)
 
 peta2ncp <- function(peta, N)  (peta*N) / (1 - peta) 
 
 ncp2peta <- function(ncp, N) ncp / (ncp + N)
+
+pomega2F <- function(pomega, df1, N) {
+  1 - ( (N * pomega )/(df1 * (pomega - 1)) )
+}
+
+pomega2peta <- function(pomega, df1, df2, N){
+  f <- pomega2F(pomega, df1, N)  
+  F2peta(f, df1, df2)
+}
 
 
 peta.ci <- function(peta, f = NA, df1, df2, N, conf.level = .9, digits = 20)
@@ -33,9 +43,9 @@ peta.ci.default <- function(peta, f = NA, df1, df2, N, conf.level = .9, digits =
       suppressWarnings(pf(q = q, df1 = df1, df2 = df2, ncp, lower.tail = FALSE)) - alpha
     }
     
-    g <- try(uniroot(u, c(0, q+1e7), alpha = alpha, q = q, df1 = df1, df2 = df2, extendInt = "yes")[[1]], silent = TRUE)
+    g <- try(uniroot(u, c(0, q+1e7), alpha = alpha, q = q, df1 = df1, df2 = df2)[[1]], silent = TRUE)
     if(inherits(g, "try-error")) g <- 0
-    h <- try(uniroot(u, c(0, q+1e7), alpha = 1-alpha, q = q, df1 = df1, df2 = df2, extendInt = "yes")[[1]], silent = TRUE)
+    h <- try(uniroot(u, c(0, q+1e7), alpha = 1-alpha, q = q, df1 = df1, df2 = df2)[[1]], silent = TRUE)
     if(inherits(h, "try-error")) h <- 0
     I <- c(g, h)
     
@@ -86,13 +96,14 @@ root <- function(pov = .6, df1 = 3, df2 = 108, N = 100, conf.level = .95, show =
   list(m = m, est = est)
 }
 
-
-plan.f.ci <- function(H2 = .2, design = 2 * 2, n.level = 2, n.covar = 0, conf.level = .9, width = .2, regress = FALSE,  pair.design = 0, assure = .99){
+                 
+plan.f.ci <- function(H2 = .2, design = 2 * 2, n.level = 2, n.covar = 0, conf.level = .9, width = .2, regress = FALSE,  pair.design = 0, assure = .99)
+{
   
-  UseMethod("plan.f.ci")
-}
-                 
-                 
+UseMethod("plan.f.ci")
+  
+  }
+
 plan.f.ci.default <- function(H2 = .2, design = 2 * 2, n.level = 2, n.covar = 0, conf.level = .9, width = .2, regress = FALSE,  pair.design = 0, assure = .99){
   
   if(any(conf.level >= 1) || any(conf.level <= 0) || any(assure >= 1) || any(assure <= 0)) stop("'conf.level' and 'assure' must be between '0' and '1'.", call. = FALSE)
@@ -142,7 +153,13 @@ plan.f.ci.default <- function(H2 = .2, design = 2 * 2, n.level = 2, n.covar = 0,
     
     n <- n.f(peta = peta, width = width, assure = assure, n.level = n.level, regress = regress, conf.level = conf.level, design = design, n.covar = n.covar, pair.design = pair.design)  
     
-    peta <- exp.pov(P2 = n$peta, K = n$design, N = n$total.N, regress = regress)
+    peta <- if(regress) { exp.pov(P2 = n$peta, K = n$design, N = n$total.N)
+      
+    } else {
+      
+      pomega2peta(pomega = n$peta, df1 = n$df1, df2 = n$df2, N = n$total.N)
+      
+    }
     
     n <- n.f(peta = peta, width = width, assure = assure, n.level = n.level, regress = regress, conf.level = conf.level, design = design, n.covar = n.covar, pair.design = pair.design)
     
@@ -162,12 +179,11 @@ plan.f.ci.default <- function(H2 = .2, design = 2 * 2, n.level = 2, n.covar = 0,
     
     NN3 <- if(!(peta.max %inn% c(a$lower, a$upper))) NN1 else max(NN1, NN2)
     
-    return(c(peta = peta, total.N = NN3, width = width, n.level = n.level, design = design, conf.level = conf.level, N1 = NN1, N2 = NN2))
+    return(c(peta = peta, total.N = NN3, width = width, n.level = n.level, design = design, conf.level = conf.level))
     
   })
   
   data.frame(t(G(peta = peta, conf.level = conf.level, width = width, design = design, n.level = n.level, n.covar = n.covar, pair.design = pair.design, assure = assure, regress = regress)), regress = regress, row.names = NULL)
 }
-
 
 
