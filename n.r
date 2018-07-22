@@ -89,6 +89,12 @@ root <- function(pov = .6, df1 = 3, df2 = 108, N = 100, conf.level = .95, show =
 
 plan.f.ci <- function(H2 = .2, design = 2 * 2, n.level = 2, n.covar = 0, conf.level = .9, width = .2, regress = FALSE,  pair.design = 0, assure = .99){
   
+  UseMethod("plan.f.ci")
+}
+                 
+                 
+plan.f.ci.default <- function(H2 = .2, design = 2 * 2, n.level = 2, n.covar = 0, conf.level = .9, width = .2, regress = FALSE,  pair.design = 0, assure = .99){
+  
   if(any(conf.level >= 1) || any(conf.level <= 0) || any(assure >= 1) || any(assure <= 0)) stop("'conf.level' and 'assure' must be between '0' and '1'.", call. = FALSE)
   peta <- H2
   G <- Vectorize(function(peta, conf.level, width, assure, design, n.level, n.covar, regress, pair.design){
