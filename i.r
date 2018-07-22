@@ -1,4 +1,31 @@
 
+Break = "\n<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>\n"
+
+notice = "   \"bayesL2\", a suite of R functions for Bayesian estimation.
+    Copyright (C) 2018  Reza Norouzian, rnorouzian@gmail.com
+
+    This program is free software: you can redistribute it under the 
+    terms of the GNU General Public License as published by the Free 
+    Software Foundation, either version 3 of the License, or any later 
+    version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. If not, see <http://www.gnu.org/licenses/>."
+
+message(Break, notice, Break)
+
+Break = "\n*****************************************************************************\n"
+
+cite = "To cite the package use:\n\nNorouzian, R., de Miranda, M. A., & Plonsky, L. (in press). The Bayesian \nrevolution in L2 research: An applied approach. Language Learning.
+
+\nNorouzian, R., de Miranda, M. A., & Plonsky, L. (under review). A Bayesian \napproach to measuring evidence in L2 research: An empirical investigation."
+
+cat(Break, cite, Break)
 
 #==================================================================================================================
 
@@ -95,17 +122,39 @@ hdir.default <- function(sample, level = .95){
 
 #==================================================================================================================
 
+
+hdiq <- function(qdist, level = .95, ...)
+{
+  UseMethod("hdiq")
+}
+
+
+hdiq.default <- function(qdist, level = .95, ...)
+  {
+
+  alpha <-  1L - level
+  width <- function(lower, qdist, level, ...){
+    qdist(level + lower, ...) - qdist(lower, ...)
+  }
+
+  low <- optimize(width, c(0, alpha), qdist = qdist, level = level, ...)[[1]]
+  
+  return(c(qdist(low, ...), qdist(level + low, ...)))
+}
+
+#==================================================================================================================
+
 eq <- function(...){ lapply(list(...), function(x) c(x, rep(rev(x)[1], max(lengths(list(...))) - length(x)))) }
 
 #==================================================================================================================
 
 
-prop.ci <- function(k, n, conf.level = .95, digits = 6)
+prop.ci <- function(k, n, conf.level = .95, digits = 9)
 {
   UseMethod("prop.ci")
 }
 
-prop.ci.default <- function(k, n, conf.level = .95, digits = 6){
+prop.ci.default <- function(k, n, conf.level = .95, digits = 9){
   
   ci <- Vectorize(function(k, n, conf.level){
     
@@ -117,12 +166,12 @@ prop.ci.default <- function(k, n, conf.level = .95, digits = 6){
 
 #==================================================================================================
 
-d.cib <- function(d, t = NA, n1, n2 = NA, conf.level = .95, digits = 6)
+d.cib <- function(d, t = NA, n1, n2 = NA, conf.level = .95, digits = 9)
 {
   UseMethod("d.cib")
 }
 
-d.cib.default <- function(d, t = NA, n1, n2 = NA, conf.level = .95, digits = 6){
+d.cib.default <- function(d, t = NA, n1, n2 = NA, conf.level = .95, digits = 9){
   
   ci <- Vectorize(function(d, t, n1, n2, conf.level){
     
@@ -162,12 +211,12 @@ d.cib.default <- function(d, t = NA, n1, n2 = NA, conf.level = .95, digits = 6){
                   
 #=================================================================================================================================                  
    
-d.ci <- function(d, t = NA, n1, n2 = NA, conf.level = .95, digits = 6)
+d.ci <- function(d, t = NA, n1, n2 = NA, conf.level = .95, digits = 9)
 {
   UseMethod("d.ci")
 }
                   
-d.ci.default <- function(d, t = NA, n1, n2 = NA, conf.level = .95, digits = 6){
+d.ci.default <- function(d, t = NA, n1, n2 = NA, conf.level = .95, digits = 9){
   
   ci <- Vectorize(function(d, t, n1, n2, conf.level){
     
@@ -183,7 +232,7 @@ d.ci.default <- function(d, t = NA, n1, n2 = NA, conf.level = .95, digits = 6){
     }
     
     CI <- sapply(c(alpha, 1-alpha),
-          function(x) uniroot(f, interval = c(-q, q+15), alpha = x, q = q, df = df, extendInt = "downX")[[1]]*d.SE)
+          function(x) uniroot(f, interval = c(-q+1e7, q+1e7), alpha = x, q = q, df = df, extendInt = "yes")[[1]]*d.SE)
     
     Cohen.d = ifelse(is.na(t), d, t*d.SE)
     
@@ -196,57 +245,89 @@ round(data.frame(t(ci(d = d, t = t, n1 = n1, n2 = n2, conf.level = conf.level)))
 }                  
                                   
 #=================================================================================================================================
-
-peta.ci <- function(peta, f = NA, df1, df2, N, conf.level = .9, digits = 6)
-{
-  UseMethod("peta.ci")
-}
-
-peta.ci.default <- function(peta, f = NA, df1, df2, N, conf.level = .9, digits = 6){
+                  
+peta.cib <- function(peta, f = NA, df1, df2, N, conf.level = .9, digits = 9){
   
   ci <- Vectorize(function(peta, f, N, df1, df2, conf.level){
     
     options(warn = -1) 
     
-    q <- ifelse(is.na(f), (-peta * df2) / ((peta * df1) - df1), f) 
+    q <- ifelse(is.na(f), peta2F(peta, df1, df2), f) 
     alpha <- (1 - conf.level)/2
     
     u <- function (ncp, alpha, q, df1, df2) {
       abs(suppressWarnings(pf(q = q, df1 = df1, df2 = df2, ncp, lower.tail = FALSE)) - alpha)
     }
     
-    a <- if(is.na(f)){ lapply(20:ifelse(peta!= 0, q+3e2, 30), function(x) c(-x, x))
-    }else{ lapply(20:ifelse(f!= 0, q+3e2, 30), function(x) c(-x, x)) }
+    a <- lapply(0:q+1e7, function(x) c(-x, x))
     
     CI <- matrix(NA, length(a), 2)
     
     for(i in 1:length(a)){
       CI[i,] <- sapply(c(alpha, 1-alpha), 
-      function(x) optimize(u, interval = a[[i]], alpha = x, q = q, df1 = df1, df2 = df2)[[1]])
+       function(x) optimize(u, interval = a[[i]], alpha = x, q = q, df1 = df1, df2 = df2)[[1]])
     }
     
     I <- CI[which.max(ave(1:nrow(CI), do.call(paste, round(data.frame(CI), 3)), FUN = seq_along)), ] 
     
-    I <- I[1:2] / (I[1:2] + N)
+    I <- I / (I + N)
     
-    P.eta.sq <- if(is.na(f)) peta else (f * df1)/ ((f * df1) + df2)
+    P.eta.sq <- if(is.na(f)) peta else F2peta(f, df1, df2)
     
-    return(c(P.eta.sq = P.eta.sq, lower = I[1], upper = I[2], conf.level = conf.level, ncp = (P.eta.sq * N) / (1 - P.eta.sq), F.value = q))
+    return(c(P.eta.sq = P.eta.sq, lower = I[1], upper = I[2], conf.level = conf.level, ncp = peta2ncp(P.eta.sq, N), F.value = q))
   })  
   
   peta <- if(missing(peta)) NA else peta
   
   round(data.frame(t(ci(peta = peta, f = f, N = N, df1 = df1, df2 = df2, conf.level = conf.level))), digits = digits)
-}               
+}           
 
+#=================================================================================================================================
+                  
+peta.ci <- function(peta, f = NA, df1, df2, N, conf.level = .9, digits = 20)
+{
+  UseMethod("peta.ci")
+} 
+                
+peta.ci.default <- function(peta, f = NA, df1, df2, N, conf.level = .9, digits = 9){
+
+ci <- Vectorize(function(peta, f, N, df1, df2, conf.level){
+    
+  q <- ifelse(is.na(f), peta2F(peta, df1, df2), f) 
+  
+    alpha <- (1 - conf.level)/2
+    
+    u <- function (ncp, alpha, q, df1, df2) {
+      suppressWarnings(pf(q = q, df1 = df1, df2 = df2, ncp, lower.tail = FALSE)) - alpha
+    }
+    
+    g <- try(uniroot(u, c(0, q+1e7), alpha = alpha, q = q, df1 = df1, df2 = df2)[[1]], silent = TRUE)
+    if(inherits(g, "try-error")) g <- 0
+    h <- try(uniroot(u, c(0, q+1e7), alpha = 1-alpha, q = q, df1 = df1, df2 = df2)[[1]], silent = TRUE)
+    if(inherits(h, "try-error")) h <- 0
+    I <- c(g, h)
+    
+    I <- I / (I + N)
+    
+    P.eta.sq <- if(is.na(f)) peta else F2peta(f, df1, df2)
+    
+    return(c(P.eta.sq = P.eta.sq, lower = I[1], upper = I[2], conf.level = conf.level, ncp = peta2ncp(P.eta.sq, N), F.value = q))
+})
+
+peta <- if(missing(peta)) NA else peta
+
+round(data.frame(t(ci(peta = peta, f = f, N = N, df1 = df1, df2 = df2, conf.level = conf.level))), digits = digits)
+}
+             
+             
 #=================================================================================================================================                
                 
-cor.ci <- function(r, n, conf.level = .95, digits = 6)
+cor.ci <- function(r, n, conf.level = .95, digits = 9)
 {
   UseMethod("cor.ci")
 }
                               
-cor.ci.default <- function(r, n, conf.level = .95, digits = 6){
+cor.ci.default <- function(r, n, conf.level = .95, digits = 9){
   
   ci <- Vectorize(function(r, n, conf.level){
     p = (1 - conf.level) / 2 
@@ -258,12 +339,12 @@ cor.ci.default <- function(r, n, conf.level = .95, digits = 6){
 
 #==================================================================================================================
 
-beta.id <- function(Low, High, Cover = NA, digits = 6)
+beta.id <- function(Low, High, Cover = NA, digits = 9)
 {
   UseMethod("beta.id")
 }
 
-beta.id.default <- function(Low, High, Cover = NA, digits = 6){
+beta.id.default <- function(Low, High, Cover = NA, digits = 9){
 
 bet <- Vectorize(function(Low, High, Cover){
   
@@ -2217,7 +2298,7 @@ d.eq.test.default <- function(t, n1, n2 = NA, m = 0, s = 1, dist.name = "dnorm",
 #======================================================================================================================
    
                        
-need <- c("rstanarm", "arrangements") # "MASS")
+need <- c("rstanarm", "arrangements", "gsl")
 have <- need %in% rownames(installed.packages())
 if(any(!have)){ install.packages( need[!have] ) }
  
@@ -2225,7 +2306,7 @@ options(warn = -1)
 suppressMessages({ 
     library("rstanarm")
     library("arrangements")
- #  library(need[3])
+    library("gsl")
 })
                       
                        
@@ -3751,7 +3832,7 @@ mu.p[mu.p > 1] <- 1 }
 #=======================================================================================================================================
     
   
- dcohen <- function(x, dbase, n1, n2 = NA, log = FALSE){
+ dcohen <- function(x, dbase = 0, n1, n2 = NA, log = FALSE){
   
   N <- ifelse(is.na(n2), n1, (n1 * n2)/(n1 + n2))
   df <- ifelse(is.na(n2), n1 - 1, (n1 + n2) - 2)
@@ -3763,33 +3844,41 @@ mu.p[mu.p > 1] <- 1 }
 #=======================================================================================================================================
 
 
-qcohen <- function(p, dbase, n1, n2 = NA, lower.tail = TRUE, log.p = FALSE){
+qcohen <- function(p, dbase = 0, n1, n2 = NA, lower.tail = TRUE, log.p = FALSE){
+  
+  q <- Vectorize(function(p, dbase, n1, n2, lower.tail, log.p){
+    
+    N <- ifelse(is.na(n2), n1, (n1 * n2)/(n1 + n2))
+    df <- ifelse(is.na(n2), n1 - 1, (n1 + n2) - 2)
+    ncp <- dbase*sqrt(N)
+    
+    qt(p, df, ncp, lower.tail = lower.tail, log.p = log.p)/sqrt(N)
+  })
+  q(p = p, dbase = dbase, n1 = n1, n2 = n2, lower.tail = lower.tail, log.p = log.p)
+}
+
+    
+#=======================================================================================================================================
+
+
+pcohen <- function(q, dbase = 0, n1, n2 = NA, lower.tail = TRUE, log.p = FALSE){
+  
+  p <- Vectorize(function(q, dbase, n1, n2, lower.tail, log.p){
   
   N <- ifelse(is.na(n2), n1, (n1 * n2)/(n1 + n2))
   df <- ifelse(is.na(n2), n1 - 1, (n1 + n2) - 2)
   ncp <- dbase*sqrt(N)
   
-  qt(p, df, ncp, lower.tail = lower.tail, log.p = log.p)/sqrt(N)
+  pt(q*sqrt(N), df, ncp, lower.tail = lower.tail, log.p = log.p)
+})
+p(q = q, dbase = dbase, n1 = n1, n2 = n2, lower.tail = lower.tail, log.p = log.p)
 }
 
     
 #=======================================================================================================================================
 
 
-pcohen <- function(q, dbase, n1, n2 = NA, lower.tail = TRUE, log.p = FALSE){
-  
- N <- ifelse(is.na(n2), n1, (n1 * n2)/(n1 + n2))
- df <- ifelse(is.na(n2), n1 - 1, (n1 + n2) - 2)
- ncp <- dbase*sqrt(N)
- 
- pt(q*sqrt(N), df, ncp, lower.tail = lower.tail, log.p = log.p)
-}
-
-    
-#=======================================================================================================================================
-
-
-rcohen <- function(n, dbase, n1, n2 = NA){
+rcohen <- function(n, dbase = 0, n1, n2 = NA){
   
   N <- ifelse(is.na(n2), n1, (n1 * n2)/(n1 + n2))
   df <- ifelse(is.na(n2), n1 - 1, (n1 + n2) - 2)
@@ -3802,7 +3891,7 @@ rcohen <- function(n, dbase, n1, n2 = NA){
 #=========================================================================================================================================
     
     
-dpeta <- function(x, df1, df2, pbase, N, log = FALSE){
+dpeta <- function(x, df1, df2, pbase = 0, N, log = FALSE){
   x[x > .9999999999999999] <- .9999999999999999
   x[x < 0] <- 0
   pbase[pbase > .9999999999999999] <- .9999999999999999
@@ -3817,7 +3906,10 @@ dpeta <- function(x, df1, df2, pbase, N, log = FALSE){
 #=========================================================================================================================================
 
 
-ppeta <- function(q, df1, df2, pbase, N, lower.tail = TRUE, log.p = FALSE){
+ppeta <- function(q, df1, df2, pbase = 0, N, lower.tail = TRUE, log.p = FALSE){
+  
+  p <- Vectorize(function(q, df1, df2, pbase, N, lower.tail, log.p){
+    
   q[q > .9999999999999999] <- .9999999999999999
   q[q < 0] <- 0
   pbase[pbase > .9999999999999999] <- .9999999999999999
@@ -3826,13 +3918,18 @@ ppeta <- function(q, df1, df2, pbase, N, lower.tail = TRUE, log.p = FALSE){
   d <- df2 / df1
   f <- q / (1 - q) * d
   pf(f, df1, df2, ncp, lower.tail = lower.tail, log.p = log.p)
+})
+p(q = q, df1 = df1, df2 = df2, pbase = pbase, N = N, lower.tail = lower.tail, log.p = log.p)
 }
 
 
 #=========================================================================================================================================
 
 
-qpeta <- function(p, df1, df2, pbase, N, lower.tail = TRUE, log.p = FALSE){
+qpeta <- function(p, df1, df2, pbase = 0, N, lower.tail = TRUE, log.p = FALSE){
+  
+  q <- Vectorize(function(p, df1, df2, pbase, N, lower.tail, log.p){
+    
   p[p > 1] <- 1
   p[p < 0] <- 0
   pbase[pbase > .9999999999999999] <- .9999999999999999
@@ -3841,13 +3938,15 @@ qpeta <- function(p, df1, df2, pbase, N, lower.tail = TRUE, log.p = FALSE){
   d <- df2 / df1
   f <- qf(p, df1, df2, ncp, lower.tail = lower.tail, log.p = log.p)
   f / (f + d)
+})
+q(p = p, df1 = df1, df2 = df2, pbase = pbase, N = N, lower.tail = lower.tail, log.p = log.p)
 }
 
 
 #=========================================================================================================================================
 
 
-rpeta <- function(n, df1, df2, pbase, N){
+rpeta <- function(n, df1, df2, pbase = 0, N){
   pbase[pbase > .9999999999999999] <- .9999999999999999
   pbase[pbase < 0] <- 0
   ncp <- (pbase * N) / (1 - pbase)
@@ -3859,7 +3958,7 @@ rpeta <- function(n, df1, df2, pbase, N){
     
 #==================================================================================================================
 
-dpetab <- function(x, df1, df2, ncp, log = FALSE){
+dpetab <- function(x, df1, df2, ncp = 0, log = FALSE){
   x[x > .9999999999999999] <- .9999999999999999
   x[x < 0] <- 0
   d <- df2 / df1
@@ -3871,7 +3970,7 @@ dpetab <- function(x, df1, df2, ncp, log = FALSE){
 #=========================================================================================================================================
 
 
-ppetab <- function(q, df1, df2, ncp, lower.tail = TRUE, log.p = FALSE){
+ppetab <- function(q, df1, df2, ncp = 0, lower.tail = TRUE, log.p = FALSE){
   q[q > .9999999999999999] <- .9999999999999999
   q[q < 0] <- 0
   d <- df2 / df1
@@ -3883,7 +3982,7 @@ ppetab <- function(q, df1, df2, ncp, lower.tail = TRUE, log.p = FALSE){
 #=========================================================================================================================================
 
 
-qpetab <- function(p, df1, df2, ncp, lower.tail = TRUE, log.p = FALSE){
+qpetab <- function(p, df1, df2, ncp = 0, lower.tail = TRUE, log.p = FALSE){
   p[p > 1] <- 1
   p[p < 0] <- 0
   d <- df2 / df1
@@ -3895,7 +3994,7 @@ qpetab <- function(p, df1, df2, ncp, lower.tail = TRUE, log.p = FALSE){
 #=========================================================================================================================================
 
 
-rpetab <- function(n, df1, df2, ncp){
+rpetab <- function(n, df1, df2, ncp = 0){
   d <- df2 / df1
   f <- rf(n, df1, df2, ncp)
   f / (f + d)
@@ -4021,25 +4120,31 @@ abline(h = 1, v = alpha, col = 8)
 #========================================================================================================================
     
 
-power.t.tests <- function(d = .1, sig.level = .05, power = .8, base.rate = 1, paired = FALSE, 
-                          two.tailed = TRUE, from = NULL, to = NULL, xlab = "Cohen's d", ylim = NULL)
+plan.t.tests <- function(d = .1, sig.level = .05, power = .8, base.rate = 1, paired = FALSE, d.range = seq(.1, .5, .05),
+                          two.tailed = TRUE, xlab = "Cohen's d", xlim = c(NULL, NULL), ylim = NULL)
 {
   
-  UseMethod("power.t.tests")
+  UseMethod("plan.t.tests")
 }
     
     
-power.t.tests.default <- function(d = .1, sig.level = .05, power = .8, base.rate = 1, paired = FALSE, 
-                          two.tailed = TRUE, from = NULL, to = NULL, xlab = "Cohen's d", ylim = NULL){
-    
+plan.t.tests.default <- function(d = .1, sig.level = .05, power = .8, base.rate = 1, paired = FALSE, d.range = seq(.1, .5, .05),
+                                  two.tailed = TRUE, xlab = "Cohen's d", xlim = c(NULL, NULL), ylim = NULL){
+  
   graphics.off()  
   original.par <- par(no.readonly = TRUE)
   on.exit(par(original.par))
   
-  if(d == 0) d <- 1e-4
+  d[d == 0] <- 1e-4
+  if(d == -Inf) d <- -6  
+  if(d == Inf) d <- 6
   if(power == 0) power <- sig.level
   
+  from <- xlim[1]
+  to <- xlim[2]
+  
   d2 <- d
+  d3 <- d.range
   d <- abs(d)
   sig.level <- if(two.tailed) sig.level/2 else sig.level
   k <- base.rate / (1 + base.rate)
@@ -4055,14 +4160,42 @@ power.t.tests.default <- function(d = .1, sig.level = .05, power = .8, base.rate
     function(x){
       
       power - pt(qt(sig.level, df = x, lower.tail = FALSE), df = x, ncp = d*sqrt(if(paired) x + 1 else k*(x + 2)), lower.tail = FALSE)
-    
-      }
+      
+    }
   }
   
   df <- ceiling(uniroot(f, c(1e-8, 1e6), extendInt = "downX")[[1]])
   
   n1 <- df + 1
   n2 <- if(paired) NA else round(base.rate*n1)
+  
+  loop <- length(d3)
+  
+  dfb <- numeric(loop)
+  n1b <- numeric(loop)
+  n2b <- numeric(loop)
+  
+  for(i in 1:loop){
+    
+    f <- if(two.tailed){ function(x){
+      
+      power - (pt(qt(sig.level, df = x), df = x, ncp = d3[i]*sqrt(if(paired) x + 1 else k*(x + 2))) + pt(qt(sig.level, df = x, lower.tail = FALSE), df = x, ncp = d3[i]*sqrt(if(paired) x + 1 else k*(x + 2)), lower.tail = FALSE))
+    }
+      
+    } else {
+      
+      function(x){
+        
+        power - pt(qt(sig.level, df = x, lower.tail = FALSE), df = x, ncp = d3[i]*sqrt(if(paired) x + 1 else k*(x + 2)), lower.tail = FALSE)
+        
+      }
+    }
+    
+    dfb[i] <- ceiling(uniroot(f, c(1e-8, 1e6), extendInt = "downX")[[1]])
+    
+    n1b[i] <- dfb[i] + 1
+    n2b[i] <- if(paired) NA else round(base.rate*n1b[i])
+  }
   
   base.rate <- if(paired) NA else base.rate
   method <- paste(if(paired) "One- or Paired sample" else "Two-sample", "t test power analysis")
@@ -4081,15 +4214,15 @@ power.t.tests.default <- function(d = .1, sig.level = .05, power = .8, base.rate
   
   ylim <- if(is.infinite(ylimb[2]) & is.null(ylim)) NULL else if(is.null(ylim)) ylimb else ylim
   
-  par(mfrow = c(2, 1), mgp = c(1.9, .5, 0), mar = c(3, 4, 2, 2))
+  par(mfrow = c(2, 1), mgp = c(2.5, .5, 0), mar = c(4, 4, 2, 2))
   
   h0 <- curve(dcohen(x, 0, n1, n2), from, to, n = 1e4, xlab = xlab, ylab = NA, yaxt = "n", bty = "n", yaxs = "i", ylim = ylim, font.lab = 2)
   
   x1 <- seq(from, a, length.out = 1e3) ; y1 <- dcohen(x1, 0, n1, n2) 
   x2 <- seq(b, to, length.out = 1e3) ; y2 <- dcohen(x2, 0, n1, n2)
   
-if(d2 < 0 & !two.tailed || two.tailed) polygon(c(from, x1, a), c(0, y1, 0), col = adjustcolor(2, .25), border = NA)
-if(d2 > 0 & !two.tailed || two.tailed) polygon(c(b, x2, to), c(0, y2, 0), col = adjustcolor(2, .25), border = NA) 
+  if(d2 < 0 & !two.tailed || two.tailed) polygon(c(from, x1, a), c(0, y1, 0), col = adjustcolor(2, .25), border = NA)
+  if(d2 > 0 & !two.tailed || two.tailed) polygon(c(b, x2, to), c(0, y2, 0), col = adjustcolor(2, .25), border = NA) 
   lines(h0, lwd = 2, col = 2, xpd = TRUE)
   
   g <- if(d2 < 0 & !two.tailed) a else if(d2 > 0 & !two.tailed) b else c(a, b)
@@ -4100,27 +4233,38 @@ if(d2 > 0 & !two.tailed || two.tailed) polygon(c(b, x2, to), c(0, y2, 0), col = 
   
   points(g, p, pch = 19, col = 2, xpd = NA)  
   
-  text(g, par('usr')[4], paste("critical d =", crit), pos = 3, cex = .7, font = 2, xpd = TRUE) 
+  text(g, par('usr')[4], bquote(bold(critical~ bolditalic(d) == .(crit))), pos = 3, cex = .7, font = 2, xpd = TRUE) 
   
   h1 <- curve(dcohen(x, d2, n1, n2), from, to, n = 1e4, add = TRUE) 
   x1 <- seq(from, a, length.out = 1e3) ; y1 <- dcohen(x1, d2, n1, n2) 
   x2 <- seq(b, to, length.out = 1e3) ; y2 <- dcohen(x2, d2, n1, n2)
-if(d2 < 0 & !two.tailed || two.tailed) polygon(c(from, x1, a), c(0, y1, 0), border = NA, density = 15, col = 4, xpd = TRUE)
-if(d2 > 0 & !two.tailed || two.tailed) polygon(c(b, x2, to), c(0, y2, 0), border = NA, density = 15, col = 4, xpd = TRUE) 
+  if(d2 < 0 & !two.tailed || two.tailed) polygon(c(from, x1, a), c(0, y1, 0), border = NA, density = 15, col = 4, xpd = TRUE)
+  if(d2 > 0 & !two.tailed || two.tailed) polygon(c(b, x2, to), c(0, y2, 0), border = NA, density = 15, col = 4, xpd = TRUE) 
   lines(h1, lwd = 2, col = 4, xpd = TRUE)
   
-  legend("topleft", legend = c("Sig. Area", "Power"), inset = c(-.15, 0), density = c(NA, 35), x.intersp = c(.3, .3),
+  legend("topleft", legend = c("Sig. Area(s)", "Power"), inset = c(-.15, 0), density = c(NA, 35), x.intersp = c(.3, .3),
          bty = "n", xpd = NA, cex = .7, text.font = 2, angle = c(NA, 45), fill = c(adjustcolor(2, .4), 4), border = c(2, 4), adj = c(0, .4))
   
-  d3 <- if(!two.tailed & d2 > 0) seq(0, to, length.out = 1e3) else if(!two.tailed & d2 < 0) seq(-to, 0, length.out = 1e3) else seq(to, -to, length.out = 1e3)
-  Power <- if(two.tailed) pcohen(a, d3, n1, n2) + pcohen(b, d3, n1, n2, lower.tail = FALSE) else if(!two.tailed & d > 0) pcohen(b, abs(d3), n1, n2, lower.tail = FALSE)
-  plot(d3, Power, type = "l", lwd = 3, xlab = xlab, las = 1, ylim = c(sig.level, 1.04), col = "green4", font.lab = 2)
-  abline(h = sig.level, col = 8, lty = 2) ; j <- par('usr')[1:2]
-  text(mean(j), sig.level, "Minimum Power (sig.level)", pos = 3, col = "gray60")
+  plot(d3, n1b, type = "b", pch = 19, lwd = 2, xlab = xlab, las = 1, col = 4, font.lab = 2, ylab = "Group Sample Size", ylim = c(0, max(n1b, n2b, na.rm = TRUE)), xaxt = "n")
+  axis(1, at = d3)
+  if(!paired)lines(d3, n2b, col = 2, lty = 3, lwd = 2, type = "b")
   
-  abline(h = sig.level, col = 8, lty = 2) ; j <- par('usr')[1:2]
-  text(mean(j), sig.level, "Minimum Power (sig.level)", pos = 3, col = "gray60")
+  points(if(!paired)rep(d, 2) else d, if(!paired) c(n1, n2) else n1, col = "magenta", bg = "cyan", pch = 21, cex = 1.5)
   
+  text(d3, n1b, n1b, pos = 1, font = 2, col = 4, cex = .7, xpd = TRUE)
+  if(!paired) text(d3, n2b, n2b, pos = 3, font = 2, col = 2, cex = .7, xpd = TRUE)
+  
+  if(paired){
+    
+    legend("topright", legend = "Group 1", col = 4, pch = 19, cex = .7, text.font = 2, lwd = 1,
+           pt.cex = 1, bty = "n")
+  } else {
+    
+    legend("topright", paste("Group", 1:2), col = c(4, 2), pch = c(19, 1), cex = .7, text.font = 2, x.intersp = c(.6, .6),
+           lwd = 1, adj = c(0, .4), pt.cex = 1, pt.lwd = c(1, 2), lty = c(1, 3), bty = "n")
+  }
+  
+  box()
   sig.level <- if(two.tailed) sig.level*2 else sig.level
   two.tailed <- if(two.tailed) "Yes" else "No"
   
@@ -4137,34 +4281,55 @@ gpower.peta <- function(spss, df2, N, design){
 (spss * df2) / (N - (spss * design))
     
 }
+                  
+gpower.peta.bw <- function(peta, rho = .5, N, m, n.group){
+    
+((1 - rho)*peta*(N - n.group)*(m -1)) / ((1 - peta)*(m*N) + (1-rho)*peta*(N - n.group)*(m -1))
+    
+}
+
+
+
+gpower.peta.b <- function(peta, rho = .5, N, m, n.group){
+    
+(peta*(N - n.group)*(1 + (m-1)*rho)) / ((1 - peta)*(m*N) + peta*(N - n.group)*(1 + (m-1)*rho))
+    
+}
    
 #===============================================================================================================================
 
                   
-power.f.tests <- function(peta, n.level, design, sig.level = .05, n.covar = 0, power = .8, 
-                          xlab = NULL, ylim = NULL, to = NULL, regress = FALSE)
+plan.f.tests <- function(peta, n.level, design, sig.level = .05, n.covar = 0, power = .8, peta.range = seq(1e-1, .9, 1e-1),
+                          xlab = NULL, ylim = NULL, to = NULL, regress = FALSE, n.groups = NULL)
 {
   
-  UseMethod("power.f.tests")
+  UseMethod("plan.f.tests")
 }
 
 
-power.f.tests.default <- function(peta, n.level, design, sig.level = .05, n.covar = 0, power = .8,
-                                  xlab = NULL, ylim = NULL, to = NULL, regress = FALSE){
+plan.f.tests.default <- function(peta, n.level, design, sig.level = .05, n.covar = 0, power = .8, peta.range = seq(1e-1, .9, 1e-1),
+                                  xlab = NULL, ylim = NULL, to = NULL, regress = FALSE, n.groups = NULL){
   
   graphics.off()  
   original.par <- par(no.readonly = TRUE)
   on.exit(par(original.par))
   options(warn = -1)
-  if(n.level <= 1) stop("Error: You must have at least '2 levels' for your factor.")
-  xlab <- if(is.null(xlab) && !regress) bquote(eta[p]^2) else if (is.null(xlab) && regress) bquote(bold(R^2)) else xlab
+  
+  
+  peta2 <- peta.range
+  
+  peta2[peta2 == 0] <- 1e-2
+  peta2[peta2 == 1] <- .99
+  
+  if(!is.null(n.groups)) message("\nNote: You are doing reseach planning for 'pairwise' comparisons.")
+  if(n.level <= 1) stop("Error: You must have at least '2 levels' or '2 predictors'.")
+  xlab <- if(is.null(xlab) && !regress) bquote(eta[p]^2) else if(is.null(xlab) && regress) bquote(bold(R^2)) else xlab
   if(!regress && missing(design)) stop("Error: 'design' must be numerically specified e.g., 'design = 2 * 4'.")
   if(regress){ n.level <- n.level + 1 ; design <- n.level }
   df1 <- n.level - 1
   if(n.covar < 0) n.covar <- 0
   x <- sapply(list(n.level, design, n.covar), round)
   n.level <- x[1] ; design <- x[2] ; n.covar <- x[3]
-  
   
   f <- function(x){
     
@@ -4177,6 +4342,26 @@ power.f.tests.default <- function(peta, n.level, design, sig.level = .05, n.cova
   
   df2 <- df2 - n.covar
   
+  loop <- length(peta2)
+  
+  Nb <- numeric(loop)
+  df2b <- numeric(loop)
+  
+  for(i in 1:loop){
+    
+    f <- function(x){
+      
+      power - suppressWarnings(pf(qf(sig.level, df1 = df1, df2 = x, lower.tail = FALSE), df1 = df1, df2 = x, ncp = (peta2[i] * (x + design) ) /(1 - peta2[i]), lower.tail = FALSE))
+    }
+    
+    df2b[i] <- ceiling(uniroot(f, c(1e-8, 1e6), extendInt = "downX")[[1]])
+    
+    Nb[i] <- df2b[i] + design
+    
+    df2b[i] <- df2b[i] - n.covar
+    
+  }
+  
   a <- qpeta(sig.level, df1, df2, 0, N, lower.tail = FALSE)
   
   to <- if(is.null(to)) max(qpeta(.999999, df1, df2, 0, N), qpeta(.999999, df1, df2, peta, N), na.rm = TRUE) else to
@@ -4187,7 +4372,7 @@ power.f.tests.default <- function(peta, n.level, design, sig.level = .05, n.cova
   
   est.power <- ppeta(a, df1, df2, peta, N, lower.tail = FALSE)
   
-  par(mfrow = c(2, 1), mgp = c(1.9, .5, 0), mar = c(3, 4, 2, 2))
+  par(mfrow = c(2, 1), mgp = c(2.5, .5, 0), mar = c(4, 4, 2, 2))
   
   h0 <- curve(dpeta(x, df1, df2, 0, N), from = 0, to = to, n = 1e4, xlab = xlab, ylab = NA, yaxt = "n", bty = "n", yaxs = "i", ylim = ylim, font.lab = 2)
   
@@ -4208,25 +4393,30 @@ power.f.tests.default <- function(peta, n.level, design, sig.level = .05, n.cova
   legend("topleft", legend = c("Sig. Area", "Power"), inset = c(-.15, 0), density = c(NA, 35), x.intersp = c(.3, .3),
          bty = "n", xpd = NA, cex = .7, text.font = 2, angle = c(NA, 45), fill = c(adjustcolor(2, .4), 4), border = c(2, 4), adj = c(0, .4))
   
-  ph1 <- seq(0, 1, 1e-2)
-  Power <- ppeta(a, df1, df2, ph1, N, lower.tail = FALSE)
-  plot(ph1, Power, type = "l", lwd = 3, xlab = xlab, las = 1, ylim = c(sig.level, 1.04), col = "green4", font.lab = 2)
-  abline(h = sig.level, col = 8, lty = 2) ; j <- par('usr')[1:2]
-  text(mean(j), sig.level, "Minimum Power (sig.level)", pos = 3, col = "gray60")
-    
+  plot(peta2, Nb, type = "b", lwd = 2, xlab = xlab, las = 1, col = "green4", font.lab = 2, xaxt = "n", ylab = "Total Sample Size")
+  axis(1, at = peta2)
+  
+  legend("topright", legend = bquote(bold("Current required"~ bolditalic("\"N\""))), col = "magenta", pt.bg = "cyan", pch = 21, cex = .7,
+         pt.cex = 1.2, bty = "n")
+  box()
+  points(peta, N, col = "magenta", bg = "cyan", pch = 21, cex = 1.5)
+  
+  text(peta2, Nb, Nb, pos = 3, font = 2, col = "gray40", cex = .8, xpd = TRUE)
+  
   method <- paste("fixed-effects", if(regress) "Regression" else if(n.covar == 0) "ANOVA" else "ANCOVA", "power analysis") 
   
   bal <- ceiling(N/design) * design
+  
+  if(!is.null(n.groups)) N <- n.groups * (bal/2)
   
   note <- if(design != 0 & N %% design != 0) paste("We suggest recruiting", bal, "subjects to achieve",  bal/design, "subjects per group.") else paste("Use \"design\" to numerically specify design structure: e.g., 'design = 3 * 4'.")
   
   n.covar <- if(n.covar == 0) NA else n.covar
   n.level <- if(regress) n.level-1 else n.level
   
-  message("\nIMPORTANT: Always pick the factor with largest # of levels to obtain required 'total.N'.")
+  if(is.null(n.groups)) message("\nImportant: Always pick the factor with largest # of levels to obtain required 'total.N'.")
   
   r  <- structure(list(est.power, a, sig.level, n.covar, design, n.level, df1, df2, N, method, note), class = "power.htest")
-  
   
   setNames(r, c("est.power", ifelse(regress, "crit.Rsq", "crit.peta"), 
                 "sig.level", "n.covar", "design", ifelse(regress, "n.pred", "n.level"), "df1", "df2", "total.N", "method", "note"))
@@ -4282,7 +4472,7 @@ cell.makeup <- function(N, design)
                   
 peta2f <- function(peta) sqrt(peta / (1 - peta))
 f2peta <- function(f) (f^2) / (1 + f^2)
-peta2F <- function(peta, df1, df2) (-peta * df2) / ((peta * df1) - df1)
+peta2F <- function(peta, df1, df2) (peta / df1) / ((1 - peta)/df2)
 F2peta <- function(F.value, df1, df2) (F.value*df1) / ((F.value*df1) + df2)
 d2r <- function(d, n1, n2) sqrt((d^2) / ((d^2) + (((n1 + n2)^2) - (2*(n1 + n2))) / (n1 * n2)))
 r2d <- function(r, n1, n2) sqrt((r^2)*(((n1 + n2)^2)-(2*(n1 + n2)))/(n1 * n2)/(1-(r^2)))
@@ -4295,7 +4485,19 @@ t2d <- function(t, n1, n2 = NA){
   N <- ifelse(is.na(n2), n1, (n1 * n2)/(n1 + n2))
   t/sqrt(N)
 }
-             
+                  
+ncp2peta <- function(ncp, N){
+  
+  ncp / (ncp + N)
+}
+   
+peta2ncp <- function(peta, N) { (peta*N) / (1 - peta) }
+                  
+peta2N <- function(peta, ncp) { (ncp - (peta * ncp)) / peta }
+                  
+d2peta <- function(d, n1, n2) (d^2) / ((d^2) + (((n1 + n2)^2) - (2*(n1 + n2))) / (n1 * n2))
+peta2d <- function(peta, n1, n2) (peta)*(((n1 + n2)^2)-(2*(n1 + n2)))/(n1 * n2)/(1-(peta))
+                  
 #==================================================================================================================================
                   
                   
@@ -4320,16 +4522,16 @@ is.whole <- function(x)  abs(x - round(x)) < .Machine$double.eps^.5
 #====================================================================================================================================
                   
 
-power.rep.measure <- function(peta, n.rep, n.group, factor.type = c("between", "within", "b.w"), sig.level = .05, n.covar = 0, power = .8, eps = .9,
-                              rho = .5, xlab = NULL, ylim = NULL, to = NULL)
+plan.rep.measure <- function(peta, n.rep, n.group, factor.type = c("between", "within", "b.w"), sig.level = .05, n.covar = 0, power = .8, eps = .9,
+                              peta.range = seq(1e-1, .9, 1e-1), rho = .5, xlab = NULL, ylim = NULL, to = NULL)
 {
   
-  UseMethod("power.rep.measure")
+  UseMethod("plan.rep.measure")
 }
 
 
-power.rep.measure.default <- function(peta, n.rep, n.group, factor.type = c("between", "within", "b.w"), sig.level = .05, n.covar = 0, power = .8, eps = .9,
-                                      rho = .5, xlab = NULL, ylim = NULL, to = NULL){
+plan.rep.measure.default <- function(peta, n.rep, n.group, factor.type = c("between", "within", "b.w"), sig.level = .05, n.covar = 0, power = .8, eps = .9,
+                              peta.range = seq(1e-1, .9, 1e-1), rho = .5, xlab = NULL, ylim = NULL, to = NULL){
   
   graphics.off()  
   original.par <- par(no.readonly = TRUE)
@@ -4338,9 +4540,14 @@ power.rep.measure.default <- function(peta, n.rep, n.group, factor.type = c("bet
   
   m <- n.rep
   
+  peta2 <- peta.range
+  
+  peta2[peta2 == 0] <- 1e-2
+  peta2[peta2 == 1] <- .99
+  
   factor.type <- match.arg(factor.type)
   
-  if(rho <= 0) rho <- -.99999999 else if(rho >= 1) rho <-.99999999
+  if(rho <= 0) rho <- 1e-7 else if(rho >= 1) rho <-.9999999
   if(eps < .5) eps <- .5 else if(eps > 1) eps <- 1
   if(n.group < 1) stop("Error: You must have at least '1 group' in your design.")
   if(m < 2) stop("Error: You must have at least '2 repeated measurements' in your design.")
@@ -4373,6 +4580,35 @@ power.rep.measure.default <- function(peta, n.rep, n.group, factor.type = c("bet
   
   df2 <- if(factor.type == "between") ceiling(df2 - n.covar) else df2 - n.covar
   
+  
+  loop <- length(peta2)
+  
+  Nb <- numeric(loop)
+  df2b <- numeric(loop)
+  
+  
+  for(i in 1:loop){
+    
+    f <- if(factor.type == "between"){ function(x){
+      
+      power - suppressWarnings(pf(qf(sig.level, df1 = df1, df2 = x, lower.tail = FALSE), df1 = df1, df2 = x, ncp = ((peta2[i] * ( x + n.group) ) /(1 - peta2[i]))*u, lower.tail = FALSE))
+    } 
+      
+    } else {
+      
+      function(x){ 
+        power - suppressWarnings(pf(qf(sig.level, df1 = df1, df2 = x, lower.tail = FALSE), df1 = df1, df2 = x, ncp = ((peta2[i] * ( ((x)/(m-1)) + n.group) ) /(1 - peta2[i]))*eps*u, lower.tail = FALSE))
+      }
+    }
+    
+    df2b[i] <- uniroot(f, c(1e-8, 1e6), extendInt = "downX")[[1]]
+    
+    Nb[i] <- if(factor.type == "between") ceiling(df2b[i] + n.group) else ceiling((df2b[i] / ((m - 1)*eps)) + n.group)
+    
+    df2b[i] <- if(factor.type == "between") ceiling(df2b[i] - n.covar) else df2b[i] - n.covar
+    
+  }
+  
   a <- qpetab(sig.level, df1, df2, 0, lower.tail = FALSE)
   
   ncp <- if(factor.type == "between") (peta2f(peta)^2)*N*u else (peta2f(peta)^2)*N*u*eps
@@ -4385,7 +4621,7 @@ power.rep.measure.default <- function(peta, n.rep, n.group, factor.type = c("bet
   
   est.power <- ppetab(a, df1, df2, ncp, lower.tail = FALSE)
   
-  par(mfrow = c(2, 1), mgp = c(1.9, .5, 0), mar = c(3, 4, 2, 2))
+  par(mfrow = c(2, 1), mgp = c(2.5, .5, 0), mar = c(4, 4, 2, 2))
   
   h0 <- curve(dpetab(x, df1, df2, 0), from = 0, to = to, n = 1e4, xlab = xlab, ylab = NA, yaxt = "n", bty = "n", yaxs = "i", ylim = ylim, font.lab = 2)
   
@@ -4393,7 +4629,6 @@ power.rep.measure.default <- function(peta, n.rep, n.group, factor.type = c("bet
   polygon(c(a, x, to), c(0, y, 0), col = adjustcolor(2, .25), border = NA)
   lines(h0, lwd = 2, col = 2, xpd = TRUE)
   abline(v = a, col = 2, lty = 2) ; crit <- round(a, 4) ; points(a, par('usr')[4], pch = 19, col = 2, xpd = NA)
-  
   
   text(a, par('usr')[4], bquote(bold("critical"~ eta[p]^2 == .(crit)~"or"~.(crit*1e2)*"%")), pos = 3, cex = .7, font = 4, xpd = TRUE)
   
@@ -4405,12 +4640,15 @@ power.rep.measure.default <- function(peta, n.rep, n.group, factor.type = c("bet
   legend("topleft", legend = c("Sig. Area", "Power"), inset = c(-.15, 0), density = c(NA, 35), x.intersp = c(.3, .3),
          bty = "n", xpd = NA, cex = .7, text.font = 2, angle = c(NA, 45), fill = c(adjustcolor(2, .4), 4), border = c(2, 4), adj = c(0, .4))
   
-  ph1 <- seq(0, 1, 1e-2)
-  ncp2 <- if(factor.type == "between") peta2f(ph1)*N*u else peta2f(ph1)*N*u*eps
-  Power <- ppetab(a, df1, df2, ncp2, lower.tail = FALSE)
-  plot(ph1, Power, type = "l", lwd = 3, xlab = xlab, las = 1, ylim = c(sig.level, 1.04), col = "green4", font.lab = 2)
-  abline(h = sig.level, col = 8, lty = 2) ; j <- par('usr')[1:2]
-  text(mean(j), sig.level, "Minimum Power (sig.level)", pos = 3, col = "gray60")
+  plot(peta2, Nb, type = "b", lwd = 2, xlab = xlab, las = 1, col = "green4", font.lab = 2, xaxt = "n", ylab = "Total Sample Size")
+  axis(1, at = peta2)
+  
+  legend("topright", legend = bquote(bold("Current required"~ bolditalic("\"N\""))), col = "magenta", pt.bg = "cyan", pch = 21, cex = .7,
+         pt.cex = 1.2, bty = "n")
+  box()
+  points(peta, N, col = "magenta", bg = "cyan", pch = 21, cex = 1.5)
+  
+  text(peta2, Nb, Nb, pos = 3, font = 2, col = "gray40", cex = .8, xpd = TRUE)
   
   method <- paste("fixed-effects repeated-measures", if(n.covar == 0) "ANOVA" else "ANCOVA", "power analysis") 
   
@@ -4427,5 +4665,611 @@ power.rep.measure.default <- function(peta, n.rep, n.group, factor.type = c("bet
   setNames(r, c("factor.type", "est.power", "crit.peta", 
                 "sig.level", "n.covar", "n.group", "n.rep", "df1", "df2", "total.N", "method", "note"))
 }
-
                   
+
+#================================================================================================================================
+                  
+                  
+ peta.rep.bayes <- function(f = NULL, peta, N, df1, df2, n.rep, factor.type = "between", a = 1.2, b = 1.2, level = .95, lo = 0, hi = 1, dist.name = "dbeta", rho = .5, eps = .9, scale = .1, top = 1.1, show.prior = FALSE, 
+                                   bottom = 1, legend = "topleft", eq.lo = 0, eq.hi = .05, peta.h0 = 0, digits = 6, col.depth = .55, labels = NULL, cex.lab = .8, 
+                                   xlab = NULL, ylab = NULL, col.hump = NULL, ...)
+  {
+
+  UseMethod("peta.rep.bayes")
+}
+
+
+peta.rep.bayes.default <- function(f = NULL, peta, N, df1, df2, n.rep, factor.type = "between", a = 1.2, b = 1.2, level = .95, lo = 0, hi = 1, dist.name = "dbeta", rho = .5, eps = .9, scale = .1, top = 1.1, show.prior = FALSE, 
+                               bottom = 1, legend = "topleft", eq.lo = 0, eq.hi = .05, peta.h0 = 0, digits = 6, col.depth = .55, labels = NULL, cex.lab = .8, 
+                               xlab = NULL, ylab = NULL, col.hump = NULL, ...){
+  
+  if(is.null(f) & missing(peta)) stop("Error: Either 'f' or 'peta' must be provided.")
+  if(!is.null(f) & !missing(peta)) stop("Error: Only one of 'f' or 'peta' must be provided.")
+  f <- if(is.null(f)) peta2F(peta, df1, df2) else f
+  
+  d <- if(is.character(dist.name)) dist.name else deparse(substitute(dist.name))
+  leg <- if(is.character(legend)) legend else deparse(substitute(legend))
+  deci <- function(x, k = 3) format(round(x, k), nsmall = k)      
+  pr <- show.prior
+  
+  
+  if(rho <= 0) rho <- 1e-7 else if(rho >= 1) rho <-.9999999
+  if(eps < .5) eps <- .5 else if(eps > 1) eps <- 1 else eps
+  
+  
+  if(!pr){
+    m <- n.rep
+    I <- eq(a, b, d, lo, hi, f, N, df1, df2, m, factor.type)
+    a = I[[1]] ; b = I[[2]] ; d = I[[3]] ; lo = I[[4]] ; hi = I[[5]] ; f = I[[6]] ; N = I[[7]] ; df1 = I[[8]] ; df2 = I[[9]] ; m = I[[10]] ; factor.type = I[[11]]
+    
+    u <- if(factor.type == "between") m / (1 + (m - 1)*rho) else m / (1 - rho)
+    
+    loop <- length(a)
+    CI <- matrix(NA, loop, 2)
+    mode <- numeric(loop)
+    peak <- numeric(loop)
+    h <- list()
+    k = numeric(loop)
+    eq.prob = numeric(loop)
+    BF10 = numeric(loop)
+    estimate = numeric(loop)
+    
+    options(warn = -1)
+    
+    for(i in 1:loop){
+      
+      p = function(x) get(d[i])(x, a[i], b[i])*as.integer(x >= lo[i])*as.integer(x <= hi[i])
+      prior = function(x) p(x)/integrate(p, lo[i], hi[i])[[1]]  
+      likelihood = function(x) df(f[i], df1[i], df2[i], ((x * N[i]) / (1 - x))*if(factor.type == "between") u[i] else u[i]*eps[i] )
+      k[i] = integrate(function(x) prior(x)*likelihood(x), lo[i], hi[i])[[1]]
+      posterior = function(x) prior(x)*likelihood(x) / k[i]
+      h[[i]] = list(x = x <- seq(0, 1, length.out = 5e2), y = posterior(x))
+      mode[i] = optimize(posterior, c(lo[i], hi[i]), maximum = TRUE)[[1]]
+      peak[i] = posterior(mode[i])
+      CI[i,] = HDI(posterior, 0, .9999999, level = level)
+      BF10[i] =  k[i] / df(f[i], df1[i], df2[i], (peta.h0 * N[i]) / (1 - peta.h0))
+      eq.prob[i] = integrate(posterior, lo[i], eq.hi)[[1]] - integrate(posterior, lo[i], eq.lo)[[1]]
+      estimate[i] <- (f[i]*df1[i]) / ((f[i]*df1[i]) + df2[i])
+    } 
+    graphics.off()
+    lab <- if(is.null(labels)) substring(d, 2) else labels
+    xlab <- if(is.null(xlab)) bquote(bold("Credible Interval"~(eta[p]^2))) else xlab
+    ylab <- if(is.null(ylab)) NA else ylab  
+    
+    plot(CI, rep(1:loop, 2), type = "n", xlim = 0:1, ylim = c(bottom*1, top*loop), ylab = ylab, yaxt = "n", xaxt = "n", xlab = xlab, font.lab = 2, mgp = c(2, .5, 0), ...)
+    abline(h = 1:loop, col = 8, lty = 3)
+    axis(1, at = axTicks(1), labels = paste0(axTicks(1)*1e2, "%"), mgp = c(2, .3, 0)) 
+    axis(2, at = 1:loop, labels = lab, font = 2, las = 1, cex.axis = cex.lab, tck = -.006, mgp = c(2, .3, 0), padj = rep(.3, loop))
+    
+    for(i in 1:loop){
+      col <- if(is.null(col.hump)) i else col.hump[i]     
+      polygon(x = h[[i]]$x, y = scale*h[[i]]$y +i, col = adjustcolor(col, col.depth), border = NA, xpd = NA)
+    }
+    m <- scale*peak + 1:loop
+    col <- if(is.null(col.hump)) 1:loop else col.hump
+    legend(x = leg, legend = rev(paste0(substring(d, 2), "(", round(a, 2), ", ", round(b, 2), ")")), pch = 22, title = "Priors", pt.bg = rev(col), col = rev(col), cex = .7, pt.cex = .6, bg = 0, box.col = 0, xpd = NA, x.intersp = .5, title.adj = .4, adj = c(0, .3))
+    box()
+    segments(CI[, 1], 1:loop, CI[, 2], 1:loop, lend = 1, lwd = 4, col = col, xpd = NA)                   
+    segments(mode, 1:loop, mode, m, lty = 3, xpd = NA, lend = 1)  
+    points(mode, 1:loop, pch = 21, bg = "cyan", cex = 1.3, col = "magenta", xpd = NA)
+    I <- deci(CI*1e2 , 2); o = deci(mode*1e2, 2)
+    text(mode, 1:loop, paste0(I[,1], "%", "    ", o, "%", "    ", I[,2], "%"), cex = .75, pos = 3, font = 2, xpd = NA)
+    
+    rownames <- if(is.null(labels)) paste0("P.eta.sq ", 1:loop, " posterior:") else paste0(1:loop, " ", labels, " posterior:")                   
+    return(round(data.frame(estimate = estimate, mode = mode, lower = CI[,1], upper = CI[,2], eq.prob = eq.prob, BF10 = BF10, row.names = rownames), digits = digits))  
+    
+  }else{
+    xlab <- if(is.null(xlab)) bquote(bold("Partial Eta.Sq"~(eta[p]^2))) else xlab
+    p <- function(x) { get(d[1])(x, a[1], b[1])*as.integer(x >= lo[1])*as.integer(x <= hi[1]) }
+    curve(p, 0, 1, yaxt = "n", xaxt = "n", ylab = NA, xlab = xlab, bty = "n", font.lab = 2, lwd = 2, n = 1e3, main = bquote(eta[p]^2*" ~ "*.(if(lo[1] > 0 || hi[1] < 1) "truncated-")*.(substring(d[1], 2))(.(round(a[1], 2)), .(round(b[1], 2)))), yaxs = "i", xpd = TRUE)
+    axis(1, at = axTicks(1), lab = paste0(axTicks(1)*1e2, "%"), mgp = c(2, .4, 0))
+  }
+}
+                                                                                                                                             
+                                                                                                                                             
+#=======================================================================================================================================================
+                                                                                                                                             
+                                                                                                                                             
+plan.d.cib <- function(d, conf.level = .95, width, assure = NULL, paired = FALSE)
+{
+  UseMethod("plan.d.cib")
+}
+
+
+plan.d.cib.default <- function(d, conf.level = .95, width, assure = NULL, paired = FALSE)
+{ 
+  
+n.d.d <- function(d, conf.level, width, paired){ 
+  
+  n.d <- Vectorize(function(d, conf.level, width, paired) 
+  {
+    alpha <- (1 - conf.level)/2
+    
+    n0 <- if(paired) 1 else 2 * (qnorm(1 - alpha)/(width/2))^2
+    n <- if(paired) ceiling(n0) else 2 * ((qt(1 - alpha, 2 * n0 - 2))/(width/2))^2
+    if(!paired) dif <- abs(n - n0)
+    
+    if(!paired){
+      
+      while(dif > 1e-6){
+        np <- n
+        n <- 2 * ((qt(1 - alpha, 2 * n - 2))/(width/2))^2
+        dif <- abs(n - np)
+      }
+      n <- ceiling(n)
+      n <- max(4, n - 5)
+      
+    } else {
+      
+      n <- max(4, n - 5)
+    }
+    
+    ci <- d.ci(d = d, n1 = n, n2 = if(paired) NA else n, conf.level = conf.level)
+    dif.full <- abs(ci$upper - ci$lower) - width
+    
+    while(dif.full > 0){
+      n <- n + 1
+      cis <- d.ci(d = d, n1 = n, n2 = if(paired) NA else n, conf.level = conf.level)
+      width.now <- abs(cis$upper - cis$lower)
+      dif.full <- width.now - width
+    }
+    
+    return(c(d = d, n = n, width = width, conf.level = conf.level))
+  })
+  
+  data.frame(t(n.d(d = d, width = width, conf.level = conf.level, paired = paired)), paired = paired, row.names = NULL)
+}    
+    
+if(is.null(assure)){
+  
+  n.d.d(d = d, conf.level = conf.level, width = width, paired = paired)
+  
+} else {
+  
+n.as <- Vectorize(function(d, conf.level, width, assure, paired){
+  
+    n0 <- n.d.d(d = d, conf.level = conf.level, width = width, paired = paired)$n
+    
+    a <- d.ci(d = d, n1 = n0, n2 = if(paired) NA else n0, conf.level = assure)$upper
+    b <- d.ci(d = d, n1 = n0, n2 = if(paired) NA else n0, conf.level = assure - (1 - assure))$upper
+    
+    limits <- function(limit.now = limit.now, nn = n0, d = d, assure = assure){
+      lower <- pcohen(-limit.now, d, n1 = nn, n2 = if(paired) NA else nn)
+      upper <- pcohen( limit.now, d, n1 = nn, n2 = if(paired) NA else nn, lower.tail = FALSE)
+      total <- lower + upper
+      return((total - (1 - assure))^2)
+    }
+    
+    d.opt <- optimize(limits, c(a, b), d = d, assure = assure)[[1]]
+    n <- n.d.d(d = d.opt, conf.level = conf.level, width = width, paired = paired)
+    return(n)
+    })
+
+  data.frame(t(n.as(d = d, conf.level = conf.level, width = width, assure = assure, paired = paired)), assure = assure, row.names = NULL)
+  }
+}
+                      
+                      
+#====================================================
+                      
+                      
+power.t <- function(d = .1, sig.level = .05, power = .8, base.rate = 1, paired = FALSE, two.tailed = TRUE)
+{
+  
+ pwr <- Vectorize(function(d, sig.level, power, base.rate, paired, two.tailed)
+   {
+   
+d <- abs(d)
+sig.level <- if(two.tailed) sig.level/2 else sig.level
+k <- base.rate / (1 + base.rate)
+options(warn = -1)
+
+f <- if(two.tailed){ function(x){
+  
+  power - (pt(qt(sig.level, df = x), df = x, ncp = d*sqrt(if(paired) x + 1 else k*(x + 2))) + pt(qt(sig.level, df = x, lower.tail = FALSE), df = x, ncp = d*sqrt(if(paired) x + 1 else k*(x + 2)), lower.tail = FALSE))
+}
+  
+} else {
+  
+  function(x){
+    
+  power - pt(qt(sig.level, df = x, lower.tail = FALSE), df = x, ncp = d*sqrt(if(paired) x + 1 else k*(x + 2)), lower.tail = FALSE)
+    
+  }
+}
+
+df <- ceiling(uniroot(f, c(1e-8, 1e7), extendInt = "downX")[[1]])
+
+n1 <- df + 1
+n2 <- if(paired) NA else round(base.rate*n1)
+
+return(c(n1 = n1, n2 = n2))
+})
+
+ data.frame(t(pwr(d = d, sig.level = sig.level, power = power, base.rate = base.rate, paired = paired, two.tailed = two.tailed)))
+}
+             
+
+               
+#=================================================================================================================
+             
+             
+             
+plan.t.ci <- function(d, conf.level = .95, width, base.rate = 1, paired = FALSE, assure = .99)
+{
+  UseMethod("plan.t.ci")
+}
+
+
+plan.t.ci.default <- function(d, conf.level = .95, width, base.rate = 1, paired = FALSE, assure = .99){
+  
+if(any(conf.level >= 1) || any(conf.level <= 0) || any(assure >= 1) || any(assure <= 0)) stop("'conf.level' and 'assure' must be between '0' and '1'.", call. = FALSE)
+  
+  G <- Vectorize(function(d, conf.level, width, base.rate, paired, assure){
+  
+  n.d <- function(d, conf.level, width, base.rate, paired, assure){
+
+alpha <- (1 - conf.level)/2
+k <- base.rate 
+
+f <- function(ncp, alpha, d, df){
+  alpha - suppressWarnings(pt(d*sqrt(if(paired) df + 1 else ((k/(1 + k))^2)*(df + 2)), df, ncp, lower.tail = FALSE))
+}
+
+dbase <- function(df){
+  sapply(c(alpha, 1 - alpha),
+  function(x) uniroot(f, c(-d+5e1, d+5e1), alpha = x, d = d, df = df, extendInt = "yes")[[1]]/sqrt(if(paired) df + 1 else ((k/(1 + k))^2)*(df + 2)))
+}
+
+m <- function(df, width){
+  abs(abs(diff(dbase(df))) - width)
+}
+
+df <- optimize(m, c(1, 1e7), width = width)
+
+if(round(df$objective, 5) != 0) return(c(NaN, message("Warning: NaN produced. Are input values correct?")))
+
+n1 <- ceiling(if(paired) df[[1]] + 1 else (df[[1]] + 2)/(1 + k))
+n2 <- if(paired) NA else round(k * n1)
+
+list(d = d, n1 = n1, n2 = n2, base.rate = base.rate, width = width, conf.level = conf.level, assure = assure, paired = paired)
+}
+
+n <- n.d(d = d, conf.level = conf.level, width = width, paired = paired, base.rate = base.rate, assure = assure)
+  
+a <- d.ci(d = d, n1 = n$n1, n2 = n$n2, conf.level = c(assure, assure - (1 - assure)))$upper
+
+dnew <- function(dnew = dnew, n1 = n$n1, n2 = n$n2, d = d, assure = assure){
+  total <- sum(pcohen(c(-dnew, dnew), d, n1 = n1, n2 = n2, lower.tail = c(TRUE, FALSE)))
+  return(abs(total - (1 - assure)))
+}
+
+dnew <- optimize(dnew, a, d = d, assure = assure)[[1]]
+n.d(d = dnew, conf.level = conf.level, width = width, paired = paired, base.rate = base.rate, assure = assure)
+})
+  
+data.frame(t(G(d = d, conf.level = conf.level, width = width, paired = paired, base.rate = base.rate, assure = assure)), row.names = NULL)
+}
+                                                                                                     
+                                                                                                     
+#===================================================================================================================================================
+                                                                                                     
+                                                                                                     
+R2.ci <- function(R2, n.pred, N, f = NA, df1 = NA, df2 = NA, conf.level = .9, digits = 20){ 
+  
+  if(is.na(df1)) df1 <- n.pred  
+  if(is.na(df2)) df2 <- N - n.pred - 1
+  if(missing(N)) N <- df1 + df2 + 1  
+      
+  a <- if(!missing(R2)){ peta.ci(peta = R2, df1 = df1, df2 = df2, N = N, conf.level = conf.level, digits = digits)
+  } else { peta.ci(f = f, df1 = df1, df2 = df2, N = N, conf.level = conf.level, digits = digits) }
+  
+  names(a)[1] <- "R2"
+  a
+}
+                                                                                                     
+#=====================================================================================================================================================
+                                                                                                     
+plan.f.cib <- function(peta = .2, design = 2 * 2, n.level = 2, n.covar = 0, conf.level = .9, width = .2, regress = FALSE, n.groups = 0, assure = .99){
+
+  if(any(conf.level >= 1) || any(conf.level <= 0) || any(assure >= 1) || any(assure <= 0)) stop("'conf.level' and 'assure' must be between '0' and '1'.", call. = FALSE)
+  
+  G <- Vectorize(function(peta, conf.level, width, assure, design, n.level, n.covar, regress, n.groups){
+  
+n.f <- function(peta, conf.level, width, assure, design, n.level, n.covar, regress, n.groups){
+  
+  alpha <- (1 - conf.level)/2
+  if(regress){ n.level <- n.level + 1 ; design <- n.level }
+  df1 <- n.level - 1
+  if(n.covar < 0) n.covar <- 0
+  options(warn = -1)
+  
+  f <- function(alpha, q, df1, df2, ncp){
+   abs(alpha - suppressWarnings(pf((peta / df1) / ((1 - peta)/df2), df1, df2, ncp, lower.tail = FALSE))) 
+  }
+  
+  pbase <- function(df2){
+  
+    g <- try(uniroot(f, c(0, 1e7), alpha = alpha, q = q, df1 = df1, df2 = df2)[[1]], silent = TRUE)
+    if(inherits(g, "try-error")) g <- 0
+    h <- try(uniroot(f, c(0, 1e7), alpha = 1-alpha, q = q, df1 = df1, df2 = df2)[[1]], silent = TRUE)
+    if(inherits(h, "try-error")) h <- 0
+    b <- c(g, h)
+    
+    b / (b + (df2 + design))
+  }
+  
+  m <- function(df2, width){
+    abs(abs(diff(pbase(df2))) - width)
+  }
+  
+  df2 <- optimize(m, c(1, 1e4), width = width)
+  if(round(df2$objective, 4) != 0) return(c(NaN, message("Error: NaN produced. Are input values correct?")))
+  
+  df2 <- ceiling(df2[[1]] - n.covar)
+  
+  N <- ceiling(df2 + design)
+  bal <- ceiling(N/design) * design
+  if(n.groups != 0){ N <- n.groups * (bal/2) ; message("\nNote: You are doing reseach planning for 'pairwise' comparisons.") }
+  N <- if(design != 0 & N %% design != 0) bal else N
+  n.covar <- if(n.covar == 0) NA else n.covar
+  n.level <- if(regress) n.level-1 else n.level
+
+list(peta = peta, total.N = N, width = width, n.level = n.level, conf.level = conf.level, assure = assure, df1 = df1, df2 = df2)
+}
+
+n <- n.f(peta = peta, conf.level = conf.level, width = width, design = design, n.level = n.level, n.covar = n.covar, regress = regress, n.groups = n.groups, assure = assure)
+
+a <- peta.ci(peta = peta, df1 = n$df1, df2 = n$df2, N = n$total.N, conf.level = c(assure, assure - (1 - assure)))$upper
+
+petanew <- function(petanew = petanew, df1 = n$df1, df2 = n$df2, peta = n$peta, N = n$total.N, assure = assure){
+  total <- sum(ppeta(c(1-petanew, petanew), peta, df1 = df1, df2 = df2, N = N, lower.tail = c(TRUE, FALSE)))
+  return(abs(total - (1 - assure)))
+}
+
+petanew <- optimize(petanew, a, peta = peta, assure = assure)[[1]]
+n.f(peta = petanew, conf.level = conf.level, width = width, design = design, n.level = n.level, n.covar = n.covar, regress = regress, n.groups = n.groups, assure = assure)
+})
+  
+data.frame(t(G(peta = peta, conf.level = conf.level, width = width, design = design, n.level = n.level, n.covar = n.covar, regress = regress, n.groups = n.groups, assure = assure)), row.names = NULL)[, 1:6, drop = FALSE]
+}
+                
+#=====================================================================================================================================================================================================
+                
+                
+d.unbias <- function(d, n1, n2 = NA, t = NA){
+
+  df <- ifelse(is.na(n2), n1 - 1, n1 + n2 - 2)
+   N <- ifelse(is.na(n2), n1, (n1 * n2)/(n1 + n2))
+   d <- if(!is.na(t)) t/sqrt(N)
+   d * exp(lgamma(df/2)-log(sqrt(df/2)) - lgamma((df-1)/2))
+
+}
+
+
+#=======================================================================================================================================
+                
+                
+graph <- function(x, y = NULL, type = "p", xlim = NULL, ylim = NULL, 
+                   log = "", main = NULL, sub = NULL, xlab = deparse(substitute(x)), ylab = deparse(substitute(y)), 
+                   ann = par("ann"), axes = TRUE, frame.plot = axes, panel.first = NULL, 
+                   panel.last = NULL, asp = NA, add = FALSE, show = TRUE, ...)
+{
+  
+  if(!add){ 
+    
+  if(!show){type <- "n"; axes <- FALSE; ann <- FALSE} 
+    
+    graphics.off()  
+    
+    plot(x = x, y = y, type = type, xlim = xlim, ylim = ylim, 
+         log = log, main = main, sub = sub, xlab = xlab, ylab = ylab, 
+         ann = ann, axes = axes, frame.plot = frame.plot, panel.first = panel.first, 
+         panel.last = panel.last, asp = asp, ...)
+    
+  }else{
+    
+    lines(x = x, y = y, type = type, ...)
+  }
+}
+                
+                
+#========================================================================================================================================================
+                
+              
+peta2d.fun <- function(peta = seq(.1, .5, .1), n = seq(30, 300, 10), base.rate = 1, xlab = "Group Sample Size", ylab = "Cohen's d", ylim = NA, ...)
+{
+
+n <- sort(n)
+peta <- sort(peta)  
+
+d <- lapply(peta, function(x) peta2d(x, n1 = n, n2 = base.rate*n))
+ylim <- if(is.na(ylim)) range(d) else ylim
+for(i in 1:length(peta)){
+  graph(n, d[[i]], type = "l", add = i!= 1, ylim = ylim, xlab = xlab, ylab = ylab, ...)
+  text(mean(n), mean(d[[i]]), bquote(eta[p]^2 == .(round(peta[i], 3))), col = 2, pos = 3, xpd = NA, cex = .8)
+  }
+}
+            
+
+#================================================================================================================================================================
+            
+            
+exp.pov <- function(P2, K, N, regress = TRUE)
+{
+  K <- if(regress) K else K + 1 
+  expect <- 1 - ((N - K - 1)/(N - 1)) * (1 - P2) * gsl::hyperg_2F1(1, 1, (N + 1)/2, P2)
+  max(0, expect)
+}
+       
+#====================================================================================================================================================================
+            
+
+plan.f.cib <- function(peta = .2, design = 2 * 2, n.level = 2, n.covar = 0, conf.level = .9, width = .2, regress = FALSE,  pair.design = 0, assure = .99){
+  
+  if(any(conf.level >= 1) || any(conf.level <= 0) || any(assure >= 1) || any(assure <= 0)) stop("'conf.level' and 'assure' must be between '0' and '1'.", call. = FALSE)
+  
+  G <- Vectorize(function(peta, conf.level, width, assure, design, n.level, n.covar, regress, pair.design){
+    
+    n.f <- function(peta, conf.level, width, assure, design, n.level, n.covar, regress, pair.design){
+      
+      alpha <- (1 - conf.level)/2
+      if(regress){ n.level <- n.level + 1 ; design <- n.level }
+      if(pair.design != 0) design <- 2
+      df1 <- n.level - 1
+      if(n.covar < 0) n.covar <- 0
+      options(warn = -1)
+      
+      f <- function(alpha, q, df1, df2, ncp){
+        alpha - suppressWarnings(pf(peta2F(peta, df1, df2), df1, df2, ncp, lower.tail = FALSE))
+      }
+      
+      pbase <- function(df2){      
+        
+        b <- sapply(c(alpha, 1 - alpha), function(x) 
+          tryCatch(uniroot(f, c(0, 1e7), alpha = x, q = q, df1 = df1, df2 = df2)[[1]], error = function(e) NA))
+        if(any(is.na(b))) b <- c(1, 1e4)     
+        ncp2peta(b, df2 + design)
+      }
+      
+      m <- function(df2, width){
+        abs(diff(pbase(df2))) - width
+      }
+      
+      df2 <- uniroot(m, c(0, 1e3), width = width, extendInt = "yes")[[1]]
+      
+      df2 <- if(regress) df2 else df2 - n.covar
+      
+      N <- ceiling(df2 + design)
+      bal <- ceiling(N/design) * design
+      if(pair.design != 0){ N <- pair.design * (bal/2) ; message("\nNote: You are doing reseach planning for accurate 'pairwise' comparisons.") }
+      N <- if(!regress & design != 0 & N %% design != 0) bal else N
+      n.covar <- if(n.covar == 0) NA else n.covar
+      n.level <- if(regress) n.level-1 else n.level
+      design <- if(regress) n.level else design
+      
+      list(peta = peta, total.N = N, width = width, n.level = n.level, conf.level = conf.level, assure = assure, df1 = df1, df2 = df2, design = design)
+    }
+    
+    n <- n.f(peta = peta, width = width, assure = assure, n.level = n.level, regress = regress, conf.level = conf.level, design = design, n.covar = n.covar, pair.design = pair.design)  
+    
+    peta <- exp.pov(P2 = n$peta, K = n$design, N = n$total.N, regress = regress)
+    
+    n.f(peta = peta, width = width, assure = assure, n.level = n.level, regress = regress, conf.level = conf.level, design = design, n.covar = n.covar, pair.design = pair.design)
+    
+  })
+  
+  data.frame(t(G(peta = peta, conf.level = conf.level, width = width, design = design, n.level = n.level, n.covar = n.covar, regress = regress, pair.design = pair.design, assure = assure)), row.names = NULL)
+} 
+                    
+
+#==========================================================================================================================================================================================================================
+                    
+                    
+                    
+plan.f.ci <- function(peta = .2, design = 2 * 2, n.level = 2, n.covar = 0, conf.level = .9, width = .2, regress = FALSE,  pair.design = 0, assure = .99){
+  
+  if(any(conf.level >= 1) || any(conf.level <= 0) || any(assure >= 1) || any(assure <= 0)) stop("'conf.level' and 'assure' must be between '0' and '1'.", call. = FALSE)
+  
+  G <- Vectorize(function(peta, conf.level, width, assure, design, n.level, n.covar, regress, pair.design){
+    
+    n.f <- function(peta, conf.level, width, assure, design, n.level, n.covar, regress, pair.design){
+      
+      alpha <- (1 - conf.level)/2
+      if(regress){ n.level <- n.level + 1 ; design <- n.level }
+      if(pair.design != 0) design <- 2
+      df1 <- n.level - 1
+      if(n.covar < 0) n.covar <- 0
+      options(warn = -1)
+      
+      f <- function(alpha, q, df1, df2, ncp){
+        alpha - suppressWarnings(pf(peta2F(peta, df1, df2), df1, df2, ncp, lower.tail = FALSE))
+      }
+      
+      pbase <- function(df2){      
+        
+        b <- sapply(c(alpha, 1 - alpha), function(x) 
+          tryCatch(uniroot(f, c(0, 1e7), alpha = x, q = q, df1 = df1, df2 = df2)[[1]], error = function(e) NA))
+        if(any(is.na(b))) b <- c(1, 1e4)     
+        ncp2peta(b, df2 + design)
+      }
+      
+      m <- function(df2, width){
+        abs(diff(pbase(df2))) - width
+      }
+      
+      df2 <- uniroot(m, c(0, 1e3), width = width, extendInt = "yes")[[1]]
+      
+      df2 <- if(regress) ceiling(df2) else ceiling(df2 - n.covar)
+      
+      N <- ceiling(df2 + design)
+      bal <- ceiling(N/design) * design
+      if(pair.design != 0){ N <- pair.design * (bal/2) ; message("\nNote: You are doing reseach planning for accurate 'pairwise' comparisons.") }
+      N <- if(!regress & design != 0 & N %% design != 0) bal else N
+      n.covar <- if(n.covar == 0) NA else n.covar
+      n.level <- if(regress) n.level-1 else n.level
+      design <- if(regress) n.level else design
+      df1 <- if(regress) n.level else df1
+      
+      list(peta = peta, total.N = N, width = width, n.level = n.level, conf.level = conf.level, assure = assure, df1 = df1, df2 = df2, design = design)
+    }
+    
+    n <- n.f(peta = peta, width = width, assure = assure, n.level = n.level, regress = regress, conf.level = conf.level, design = design, n.covar = n.covar, pair.design = pair.design)  
+    
+    peta <- exp.pov(P2 = n$peta, K = n$design, N = n$total.N, regress = regress)
+    
+    n <- n.f(peta = peta, width = width, assure = assure, n.level = n.level, regress = regress, conf.level = conf.level, design = design, n.covar = n.covar, pair.design = pair.design)
+    
+    peta.max <- root(pov = peta, df1 = n$df1, df2 = n$df2, N = n$total.N, conf.level = conf.level)$m
+    
+    a <- peta.ci(peta = peta, df1 = n$df1, df2 = n$df2, N = n$total.N, conf.level = assure - (1 - assure))
+    
+    nLU <- sapply(c(a$lower, a$upper), function(x) n.f(peta = x, width = width, assure = assure, n.level = n.level, regress = regress, conf.level = conf.level, design = design, n.covar = n.covar, pair.design = pair.design)$total.N)
+    
+    NN1 <- max(nLU, na.rm = TRUE)
+      
+    b <- peta.ci(peta = peta.max, df1 = n$df1, df2 = n$df2, N = n$total.N, conf.level = 1 - assure)
+    
+    nLU <- sapply(c(b$lower, b$upper), function(x) n.f(peta = x, width = width, assure = assure, n.level = n.level, regress = regress, conf.level = conf.level, design = design, n.covar = n.covar, pair.design = pair.design)$total.N)
+    
+    NN2 <- max(nLU, na.rm = TRUE)
+      
+    NN3 <- if(!(peta.max %inn% c(a$lower, a$upper))) NN1 else max(NN1, NN2)
+    
+    return(c(peta = peta, total.N = NN3, width = width, n.level = n.level, design = design, conf.level = conf.level, N1 = NN1, N2 = NN2))
+    
+  })
+
+  data.frame(t(G(peta = peta, conf.level = conf.level, width = width, design = design, n.level = n.level, n.covar = n.covar, pair.design = pair.design, assure = assure, regress = regress)), regress = regress, row.names = NULL)
+}                    
+                    
+#==========================================================================================================================================================================================================================
+                    
+                    
+"%inn%" <- function(x = 3.5, interval = c(3, 5)){
+  
+  int <- range(interval, na.rm = TRUE)
+  
+    x >= int[1] & x <= int[2] 
+}
+                                       
+#=============================================================================================================================================================================================================================
+                    
+                    
+root <- function(pov = .6, df1 = 3, df2 = 108, N = 100, conf.level = .95, show = FALSE, ...){
+  
+  f <- function(x){ 
+    
+    ci <- peta.ci(peta = x, df1 = df1, df2 = df2, N = N, conf.level = conf.level, digits = 1e2)
+    
+    abs(ci$upper - ci$lower)
+  }
+  
+  m <- optimize(f, 0:1, maximum = TRUE)[[1]]
+  
+  est <- uniroot(function(x) f(pov) - f(x), if(pov >= m) c(0, m) else c(m, 1))[[1]]
+  
+  if(show) curve(f, panel.f = abline(v = c(pov, est), h = f(pov), col = 2, lty = c(2, 1, 1)), ...) 
+  
+  list(m = m, est = est)
+}
