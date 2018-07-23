@@ -43,9 +43,9 @@ peta.ci.default <- function(peta, f = NA, df1, df2, N, conf.level = .9, digits =
       suppressWarnings(pf(q = q, df1 = df1, df2 = df2, ncp, lower.tail = FALSE)) - alpha
     }
     
-    g <- try(uniroot(u, c(0, q+1e7), alpha = alpha, q = q, df1 = df1, df2 = df2)[[1]], silent = TRUE)
+    g <- try(uniroot(u, c(0, q+1e7), alpha = alpha, q = q, df1 = df1, df2 = df2, extendInt = "yes")[[1]], silent = TRUE)
     if(inherits(g, "try-error")) g <- 0
-    h <- try(uniroot(u, c(0, q+1e7), alpha = 1-alpha, q = q, df1 = df1, df2 = df2)[[1]], silent = TRUE)
+    h <- try(uniroot(u, c(0, q+1e7), alpha = 1-alpha, q = q, df1 = df1, df2 = df2, extendInt = "yes")[[1]], silent = TRUE)
     if(inherits(h, "try-error")) h <- 0
     I <- c(g, h)
     
@@ -126,7 +126,7 @@ plan.f.ci.default <- function(H2 = .2, design = 2 * 2, n.level = 2, n.covar = 0,
       pbase <- function(df2){      
         
         b <- sapply(c(alpha, 1 - alpha), function(x) 
-          tryCatch(uniroot(f, c(0, 1e7), alpha = x, q = q, df1 = df1, df2 = df2)[[1]], error = function(e) NA))
+          tryCatch(uniroot(f, c(0, 1e7), alpha = x, q = q, df1 = df1, df2 = df2, extendInt = "yes")[[1]], error = function(e) NA))
         if(any(is.na(b))) b <- c(1, 1e4)     
         ncp2peta(b, df2 + design)
       }
