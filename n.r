@@ -62,9 +62,8 @@ peta.ci.default <- function(peta, f = NA, df1, df2, N, conf.level = .9, digits =
 }
 
 
-exp.pov <- function(P2, K, N, regress = TRUE)
+exp.pov <- function(P2, K, N)
 {
-  K <- if(regress) K else K + 1 
   expect <- 1 - ((N - K - 1)/(N - 1)) * (1 - P2) * gsl::hyperg_2F1(1, 1, (N + 1)/2, P2)
   max(0, expect)
 }
