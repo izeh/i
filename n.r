@@ -16,13 +16,30 @@ peta2ncp <- function(peta, N)  (peta*N) / (1 - peta)
 
 ncp2peta <- function(ncp, N) ncp / (ncp + N)
 
-pomega2F <- function(pomega, df1, N) {
-  1 - ( (N * pomega )/(df1 * (pomega - 1)) )
+
+dpeta <- function(x, df1, df2, pbase = 0, N, log = FALSE){
+  x[x > .9999999999999999] <- .9999999999999999
+  x[x < 0] <- 0
+  pbase[pbase > .9999999999999999] <- .9999999999999999
+  pbase[pbase < 0] <- 0
+  ncp <- (pbase * N) / (1 - pbase)
+  d <- df2 / df1
+  f <- x / (1 - x) * d
+  df(f, df1, df2, ncp, log = log) * d * ( 1 / (1 - x) + x / (1 - x)^2 )
 }
 
-pomega2peta <- function(pomega, df1, df2, N){
-  f <- pomega2F(pomega, df1, N)  
-  F2peta(f, df1, df2)
+exp.peta <- function(pbase = 0, df1, df2, N){
+  
+  pbase[pbase > .99999999] <- .99999999
+  
+  ncp <- (pbase * N) / (1 - pbase)
+  
+integrate(function(x, df1, df2, pbase, N){
+  
+  x * dpeta(x = x, df1 = df1, df2 = df2, pbase = pbase, N = N)
+  
+}, 0, 1, df1 = df1, df2 = df2, pbase = pbase, N = N)[[1]]
+
 }
 
 
@@ -156,7 +173,7 @@ plan.f.ci.default <- function(H2 = .2, design = 2 * 2, n.level = 2, n.covar = 0,
       
     } else {
       
-      pomega2peta(pomega = n$peta, df1 = n$df1, df2 = n$df2, N = n$total.N)
+      exp.peta(pbase = n$peta, df1 = n$df1, df2 = n$df2, N = n$total.N)
       
     }
     
