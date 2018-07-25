@@ -1,12 +1,4 @@
 
-need <- "gsl"
-have <- need %in% rownames(installed.packages())
-if(!have){ install.packages( need[!have] ) }
-
-options(warn = -1)
-suppressMessages({ 
-  library("gsl")
-})
 
 F2peta <- function(F.value, df1, df2) (F.value*df1) / ((F.value*df1) + df2)
 
@@ -28,16 +20,18 @@ dpeta <- function(x, df1, df2, pbase = 0, N, log = FALSE){
   df(f, df1, df2, ncp, log = log) * d * ( 1 / (1 - x) + x / (1 - x)^2 )
 }
 
+
 exp.peta <- function(pbase = 0, df1, df2, N){
   
   pbase[pbase > .99999999] <- .99999999
+  pbase[pbase < 0] <- 0
   
-integrate(function(x, df1, df2, pbase, N){
+  integrate(function(x, df1, df2, pbase, N){
+    
+    x * dpeta(x = x, df1 = df1, df2 = df2, pbase = pbase, N = N)
+    
+  }, 0, 1, df1 = df1, df2 = df2, pbase = pbase, N = N)[[1]]
   
-  x * dpeta(x = x, df1 = df1, df2 = df2, pbase = pbase, N = N)
-  
-}, 0, 1, df1 = df1, df2 = df2, pbase = pbase, N = N)[[1]]
-
 }
 
 
@@ -77,13 +71,6 @@ peta.ci.default <- function(peta, f = NA, df1, df2, N, conf.level = .9, digits =
 }
 
 
-exp.pov <- function(P2, K, N)
-{
-  expect <- 1 - ((N - K - 1)/(N - 1)) * (1 - P2) * gsl::hyperg_2F1(1, 1, (N + 1)/2, P2)
-  max(0, expect)
-}
-
-
 "%inn%" <- function(x = 3.5, interval = c(3, 5)){
   
   r <- range(interval, na.rm = TRUE)
@@ -110,13 +97,13 @@ root <- function(pov = .6, df1 = 3, df2 = 108, N = 100, conf.level = .95, show =
   list(m = m, est = est)
 }
 
-                 
+
 plan.f.ci <- function(H2 = .2, design = 2 * 2, n.level = 2, n.covar = 0, conf.level = .9, width = .2, regress = FALSE,  pair.design = 0, assure = .99)
 {
   
-UseMethod("plan.f.ci")
+  UseMethod("plan.f.ci")
   
-  }
+}
 
 plan.f.ci.default <- function(H2 = .2, design = 2 * 2, n.level = 2, n.covar = 0, conf.level = .9, width = .2, regress = FALSE,  pair.design = 0, assure = .99){
   
@@ -167,13 +154,7 @@ plan.f.ci.default <- function(H2 = .2, design = 2 * 2, n.level = 2, n.covar = 0,
     
     n <- n.f(peta = peta, width = width, assure = assure, n.level = n.level, regress = regress, conf.level = conf.level, design = design, n.covar = n.covar, pair.design = pair.design)  
     
-    peta <- if(regress) { exp.pov(P2 = n$peta, K = n$design, N = n$total.N)
-      
-    } else {
-      
-      exp.peta(pbase = n$peta, df1 = n$df1, df2 = n$df2, N = n$total.N)
-      
-    }
+    peta <- exp.peta(pbase = n$peta, df1 = n$df1, df2 = n$df2, N = n$total.N)
     
     n <- n.f(peta = peta, width = width, assure = assure, n.level = n.level, regress = regress, conf.level = conf.level, design = design, n.covar = n.covar, pair.design = pair.design)
     
@@ -199,5 +180,3 @@ plan.f.ci.default <- function(H2 = .2, design = 2 * 2, n.level = 2, n.covar = 0,
   
   data.frame(t(G(peta = peta, conf.level = conf.level, width = width, design = design, n.level = n.level, n.covar = n.covar, pair.design = pair.design, assure = assure, regress = regress)), regress = regress, row.names = NULL)
 }
-
-
