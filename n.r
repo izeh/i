@@ -10,9 +10,9 @@ ncp2peta <- function(ncp, N) ncp / (ncp + N)
 
 
 dpeta <- function(x, df1, df2, pbase = 0, N, log = FALSE){
-  x[x > .9999999999999999] <- .9999999999999999
+  x[x > .9999999] <- .9999999
   x[x < 0] <- 0
-  pbase[pbase > .9999999999999999] <- .9999999999999999
+  pbase[pbase > .9999999] <- .9999999
   pbase[pbase < 0] <- 0
   ncp <- (pbase * N) / (1 - pbase)
   d <- df2 / df1
@@ -22,9 +22,6 @@ dpeta <- function(x, df1, df2, pbase = 0, N, log = FALSE){
 
 
 exp.peta <- Vectorize(function(pbase = 0, df1, df2, N){
-  
-  pbase[pbase > .9999999] <- .9999999
-  pbase[pbase < 0] <- 0
   
   integrate(function(x, df1, df2, pbase, N){
     
