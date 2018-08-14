@@ -32,12 +32,12 @@ exp.peta <- Vectorize(function(pbase = 0, df1, df2, N){
 })
 
 
-peta.ci <- function(peta, f = NA, df1, df2, N, conf.level = .9, digits = 20)
+peta.ci <- function(peta, f = NA, df1, df2, N, conf.level = .9, digits = 1e2)
 {
   UseMethod("peta.ci")
 } 
 
-peta.ci.default <- function(peta, f = NA, df1, df2, N, conf.level = .9, digits = 9){
+peta.ci.default <- function(peta, f = NA, df1, df2, N, conf.level = .9, digits = 1e2){
   
   ci <- Vectorize(function(peta, f, N, df1, df2, conf.level){
     
@@ -80,7 +80,7 @@ root <- function(pov = .6, df1 = 3, df2 = 108, N = 100, conf.level = .95, show =
   
   f <- function(x){ 
     
-    ci <- peta.ci(peta = x, df1 = df1, df2 = df2, N = N, conf.level = conf.level, digits = 1e2)
+    ci <- peta.ci(peta = x, df1 = df1, df2 = df2, N = N, conf.level = conf.level)
     
     abs(ci$upper - ci$lower)
   }
