@@ -5340,6 +5340,7 @@ d.width.meta <- Vectorize(function(lower, upper, n1 = 50, n2 = 50){
 #==========================================================================================================================================================================================================================                    
                     
 
+
 plan.f.ci <- function(pov, design = 2 * 2, n.level = 2, n.pred = NULL, n.covar = 0, conf.level = .95, width = NA, assure = .99, expect = FALSE, reduce.by = "0%", d = NA, lower, upper, increase.by = "0%", tol = 1e3)
 {
   
@@ -5397,7 +5398,12 @@ plan.f.ci.default <- function(pov, design = 2 * 2, f = NA, n.level = 2, n.pred =
         abs(diff(pbase(df2))) - width
       }
       
-      df2 <- ceiling(uniroot(m, c(0, 1e3), width = width, extendInt = "yes")[[1]])
+      df2 <- uniroot(m, c(0, 1e3), width = width, extendInt = "yes")
+      
+      
+      if(round(df2$f.root, 3) != 0) stop("\n****************************\nImpossible planning: You may change your 'width' or 'lower' & 'upper' or 'tol'.\n****************************\n", call. = FALSE)
+      
+      df2 <- ceiling(df2[[1]])
       
       N <- ceiling(df2 + design) + n.covar
       # bal <- ceiling(N/design) * design
@@ -5443,7 +5449,7 @@ plan.f.ci.default <- function(pov, design = 2 * 2, f = NA, n.level = 2, n.pred =
   names(a)[1] <- if(regress) "R2" else if(!is.na(d)) "d" else "peta"
   a[, 1] <- if(is.na(d)) pov else d
   a
-}                                                                                     
+}                                               
                     
 #==========================================================================================================================================================================================================================
                     
