@@ -1,5 +1,6 @@
 
 
+
 #==================================================================================================================
 
 HDI <- function(fun, lower = 0, upper = 1, level = .95, eps = 1e-3)
@@ -4542,7 +4543,7 @@ peta2N <- function(peta, ncp) { (ncp - (peta * ncp)) / peta }
                   
 d2peta <- function(d, n1 = 300, n2 = 300) (d^2) / ((d^2) + (((n1 + n2)^2) - (2*(n1 + n2))) / (n1 * n2))
                   
-peta2d <- function(peta, n1 = 300, n2 = 300) (peta)*(((n1 + n2)^2)-(2*(n1 + n2)))/(n1 * n2)/(1-(peta))
+peta2d <- function(peta, n1 = 300, n2 = 300) sqrt((peta)*(((n1 + n2)^2)-(2*(n1 + n2)))/(n1 * n2)/(1-(peta)))
                   
 F2pomega <- function(F.value, df1, N){
   (df1 * (F.value - 1)) / ((df1 * (F.value - 1)) + N)
@@ -5449,7 +5450,7 @@ plan.f.ci.default <- function(pov, design = 2 * 2, f = NA, n.level = 2, n.pred =
   names(a)[1] <- if(regress) "R2" else if(!is.na(d)) "d" else "peta"
   a[, 1] <- if(is.na(d)) pov else d
   a
-}                                               
+}                                                                                         
                     
 #==========================================================================================================================================================================================================================
                     
