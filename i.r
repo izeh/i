@@ -8029,5 +8029,5 @@ d.ci.default <- function(d, t = NA, n1, n2 = NA, conf.level = .95, digits = 1e2,
   #  library("pscl")
   #  library("glmmTMB")
   #  library("arrangements")
-})
+# })
                      
