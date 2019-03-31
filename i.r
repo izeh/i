@@ -1,5 +1,31 @@
 
+Break = "\n<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>\n"
 
+notice = "   \"bayesL2\", a suite of R functions for Bayesian estimation in L2 research.
+    Copyright (C) 2017-present  Reza Norouzian, rnorouzian@gmail.com
+
+    This program is free software: you can redistribute it under the 
+    terms of the GNU General Public License as published by the Free 
+    Software Foundation, either version 3 of the License, or any later 
+    version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program. If not, see <http://www.gnu.org/licenses/>."
+
+message(Break, notice, Break)
+
+Break = "\n*****************************************************************************\n"
+
+cite = "To cite the package use:\n\nNorouzian, R., de Miranda, M. A., & Plonsky, L. (2018). The Bayesian \nrevolution in second language research: An applied approach. Language Learning, 64, 1032-1075.
+
+\nNorouzian, R., de Miranda, M. A., & Plonsky, L. (2019). A Bayesian approach to measuring evidence \nin L2 research: An empirical investigation. Modern Language Journal, 103, 248-263."
+
+cat(Break, cite, Break)
 
 #==================================================================================================================
 
@@ -174,6 +200,19 @@ cor2 <- function(...) {
          numeric(1))
 }
 
+
+#==================================================================================================================                            
+                            
+                            
+set.margin <- function() 
+{
+  par.mf <- par("mfrow", "mfcol")
+  if (all(unlist(par.mf) == 1)) {
+    par(mgp = c(1.5, 0.5, 0), mar = c(2.5, 2.5, 2, 1) + 0.1, 
+        tck = -0.02)
+  }
+}
+                            
 #==================================================================================================================
 
 
@@ -192,86 +231,7 @@ prop.ci.default <- function(k, n, conf.level = .95, digits = 1e2){
   round(data.frame(t(ci(k = k, n = n, conf.level = conf.level))), digits = digits)
 }
 
-#==================================================================================================
-
-d.cib <- function(d, t = NA, n1, n2 = NA, conf.level = .95, digits = 1e2)
-{
-  UseMethod("d.cib")
-}
-
-d.cib.default <- function(d, t = NA, n1, n2 = NA, conf.level = .95, digits = 1e2){
-  
-  ci <- Vectorize(function(d, t, n1, n2, conf.level){
-    
-    options(warn = -1)  
-    alpha = (1 - conf.level)/2
-    N = ifelse(is.na(n2), n1, (n1 * n2)/(n1 + n2))
-    df = ifelse(is.na(n2), n1 - 1, (n1 + n2) - 2)
-    d.SE = 1/sqrt(N)
-    q = ifelse(is.na(t), d/d.SE, t)
-    
-    f <- function(ncp, alpha, q, df){
-      abs(suppressWarnings(pt(q = q, df = df, ncp, lower.tail = FALSE)) - alpha)
-    }
-    
-    a = if(is.na(t)){ lapply(14:ifelse(d!= 0, q+2e2, 30), function(x) c(-x, x))
-    }else{ lapply(14:ifelse(t!= 0, q+2e2, 30), function(x) c(-x, x)) }
-    
-    CI = matrix(NA, length(a), 2)
-    
-    for(i in 1:length(a)){
-      CI[i,] = sapply(c(alpha, 1-alpha),
-      function(x) optimize(f, interval = a[[i]], alpha = x, q = q, df = df)[[1]]*d.SE)
-    }  
-    
-    I = CI[which.max(ave(1:nrow(CI), do.call(paste, round(data.frame(CI), 3)), FUN = seq_along)), ]  
-    
-    Cohen.d = ifelse(is.na(t), d, t*d.SE)
-    
-    return(c(Cohen.d = Cohen.d, lower = I[1], upper = I[2], conf.level = conf.level, ncp = q))
-  })
-  
-  d <- if(missing(d)) NA else d
-  
-  round(data.frame(t(ci(d = d, t = t, n1 = n1, n2 = n2, conf.level = conf.level))), digits = digits)
-}
-
-                  
-#=================================================================================================================================                  
-   
-d.ci <- function(d, t = NA, n1, n2 = NA, conf.level = .95, digits = 1e2)
-{
-  UseMethod("d.ci")
-}
-                  
-d.ci.default <- function(d, t = NA, n1, n2 = NA, conf.level = .95, digits = 1e2){
-  
-  ci <- Vectorize(function(d, t, n1, n2, conf.level){
-    
-    options(warn = -1)  
-    alpha = (1 - conf.level)/2
-    N = ifelse(is.na(n2), n1, (n1 * n2)/(n1 + n2))
-    df = ifelse(is.na(n2), n1 - 1, (n1 + n2) - 2)
-    d.SE = 1/sqrt(N)
-    q = ifelse(is.na(t), d/d.SE, t)
-    
-    f <- function(ncp, alpha, q, df){
-     alpha - suppressWarnings(pt(q, df, ncp, lower.tail = FALSE))
-    }
-    
-    CI <- sapply(c(alpha, 1-alpha),
-          function(x) uniroot(f, interval = c(-q+1e7, q+1e7), alpha = x, q = q, df = df, extendInt = "yes")[[1]]*d.SE)
-    
-    Cohen.d = ifelse(is.na(t), d, t*d.SE)
-    
-    return(c(Cohen.d = Cohen.d, lower = CI[1], upper = CI[2], conf.level = conf.level, ncp = q))
-  })
-  
-  d <- if(missing(d)) NA else d
-  
-round(data.frame(t(ci(d = d, t = t, n1 = n1, n2 = n2, conf.level = conf.level))), digits = digits)
-}                  
-
+                               
 #=================================================================================================================================                  
                   
 d.cic <- function(d, n1, n2 = NA, conf.level = .95, digits = 1e2){
@@ -286,91 +246,14 @@ d.cic <- function(d, n1, n2 = NA, conf.level = .95, digits = 1e2){
     }
     
     CI <- sapply(c(alpha, 1-alpha),
-          function(x) uniroot(f, interval = c(-d+1e7, d+1e7), alpha = x, extendInt = "yes")[[1]])
+          function(x) uniroot(f, interval = c(-1e7, 1e7), alpha = x, extendInt = "yes")[[1]])
     
     return(c(Cohen.d = d, lower = CI[1], upper = CI[2], conf.level = conf.level))
   })
   
   round(data.frame(t(ci(d = d, n1 = n1, n2 = n2, conf.level = conf.level))), digits = digits)
 } 
-                  
-#=================================================================================================================================
-                  
-peta.cib <- function(peta, f = NA, df1, df2, N, conf.level = .9, digits = 1e2){
-  
-  ci <- Vectorize(function(peta, f, N, df1, df2, conf.level){
-    
-    options(warn = -1) 
-    
-    q <- ifelse(is.na(f), peta2F(peta, df1, df2), f) 
-    alpha <- (1 - conf.level)/2
-    
-    u <- function (ncp, alpha, q, df1, df2) {
-      abs(suppressWarnings(pf(q = q, df1 = df1, df2 = df2, ncp, lower.tail = FALSE)) - alpha)
-    }
-    
-    a <- lapply(0:q+1e7, function(x) c(-x, x))
-    
-    CI <- matrix(NA, length(a), 2)
-    
-    for(i in 1:length(a)){
-      CI[i,] <- sapply(c(alpha, 1-alpha), 
-       function(x) optimize(u, interval = a[[i]], alpha = x, q = q, df1 = df1, df2 = df2)[[1]])
-    }
-    
-    I <- CI[which.max(ave(1:nrow(CI), do.call(paste, round(data.frame(CI), 3)), FUN = seq_along)), ] 
-    
-    I <- I / (I + N)
-    
-    P.eta.sq <- if(is.na(f)) peta else F2peta(f, df1, df2)
-    
-    return(c(P.eta.sq = P.eta.sq, lower = I[1], upper = I[2], conf.level = conf.level, ncp = peta2ncp(P.eta.sq, N), F.value = q))
-  })  
-  
-  peta <- if(missing(peta)) NA else peta
-  
-  round(data.frame(t(ci(peta = peta, f = f, N = N, df1 = df1, df2 = df2, conf.level = conf.level))), digits = digits)
-}           
-
-#=================================================================================================================================
-                  
-peta.ci <- function(peta, f = NA, df1, df2, N, conf.level = .9, digits = 1e2)
-{
-  UseMethod("peta.ci")
-} 
-                
-peta.ci.default <- function(peta, f = NA, df1, df2, N, conf.level = .9, digits = 1e2){
-
-ci <- Vectorize(function(peta, f, N, df1, df2, conf.level){
-    
-  q <- ifelse(is.na(f), peta2F(peta, df1, df2), f) 
-  
-    alpha <- (1 - conf.level)/2
-    
-    u <- function (ncp, alpha, q, df1, df2) {
-      suppressWarnings(pf(q = q, df1 = df1, df2 = df2, ncp, lower.tail = FALSE)) - alpha
-    }
-    
-    g <- try(uniroot(u, c(0, q+1e7), alpha = alpha, q = q, df1 = df1, df2 = df2, extendInt = "yes")[[1]], silent = TRUE)
-    if(inherits(g, "try-error")) g <- 0
-    h <- try(uniroot(u, c(0, q+1e7), alpha = 1-alpha, q = q, df1 = df1, df2 = df2, extendInt = "yes")[[1]], silent = TRUE)
-    if(inherits(h, "try-error")) h <- 0
-    I <- c(g, h)
-    
-    I <- I / (I + N)
-    
-    P.eta.sq <- if(is.na(f)) peta else F2peta(f, df1, df2)
-    
-    return(c(P.eta.sq = P.eta.sq, lower = I[1], upper = I[2], conf.level = conf.level, ncp = peta2ncp(P.eta.sq, N), F.value = q))
-})
-
-peta <- if(missing(peta)) NA else peta
-
-round(data.frame(t(ci(peta = peta, f = f, N = N, df1 = df1, df2 = df2, conf.level = conf.level))), digits = digits)
-}
-             
-#=================================================================================================================================
-                  
+                                    
 
 #=================================================================================================================================                
                 
@@ -2462,30 +2345,30 @@ round(data.frame(mode = mode, mean = mean, sd = sd, mad = mad, lower = I[,1], up
 #=======================================================================
                          
                        
-#lm.sample2 <- function(fit, n = 1e4, no.names = TRUE)
-#{
-#  UseMethod("lm.sample2")
-#}                       
+lm.sample2 <- function(fit, n = 1e4, no.names = TRUE)
+{
+  UseMethod("lm.sample2")
+}                       
                 
                        
-#lm.sample2.default <- function(fit, n = 1e4, no.names = TRUE){
+lm.sample2.default <- function(fit, n = 1e4, no.names = TRUE){
  
-#if(class(fit)[1] != "stanreg") stop("Error: 'fit' must be from package 'rstanarm's 'stan_glm()'.")
+if(class(fit)[1] != "stanreg") stop("Error: 'fit' must be from package 'rstanarm's 'stan_glm()'.")
     
-#  output <- as.data.frame(MASS::mvrnorm(n = n, mu = c(coef(fit), sigma(fit)), Sigma = cov(as.matrix(fit))))
+  output <- as.data.frame(rmvnorm(n = n, mean = c(coef(fit), sigma(fit)), sigma = cov(as.matrix(fit))))
   
-#  if(no.names == TRUE){
-#    for(i in 1:ncol(output)){
-#     if(colnames(output)[i] == "(Intercept)"){
-#        colnames(output)[i] <- "Intercept"
-#      }
-#      if(colnames(output)[i] == paste0("V", ncol(output))){
-#        colnames(output)[i] <- "Sigma"
-#      }
-#    }
-#  }
-#  output
-# }
+  if(no.names){
+    for(i in 1:ncol(output)){
+     if(colnames(output)[i] == "(Intercept)"){
+        colnames(output)[i] <- "Intercept"
+      }
+      if(colnames(output)[i] == paste0("V", ncol(output))){
+        colnames(output)[i] <- "Sigma"
+      }
+    }
+  }
+output
+}
                      
                        
 #======================================================================================
@@ -2503,7 +2386,7 @@ if(class(fit)[1] != "stanreg") stop("Error: 'fit' must be from package 'rstanarm
     
   output <- as.data.frame(fit)
   
-  if(no.names == TRUE){
+  if(no.names){
     for(i in 1:ncol(output)){
       if(colnames(output)[i] == "(Intercept)"){
         colnames(output)[i] <- "Intercept"
@@ -3520,7 +3403,42 @@ inv.logit <- function(x, percent = FALSE, digits = 4){
   
 }            
                               
-                              
+#==============================================================================================================================
+         
+log.sum.exp <- function (x) 
+{
+  xmax <- max(x)
+  xsum <- sum(exp(x - xmax))
+  xmax + log(xsum)
+}         
+         
+#==============================================================================================================================
+     
+         
+dzpois <- function (x, p, lambda, log = FALSE) 
+{
+  ll <- rep(0, length(x))
+  p_i <- p[1]
+  lambda_i <- lambda[1]
+  for (i in 1:length(x)) {
+    if (length(p) > 1) 
+      p_i <- p[i]
+    if (length(lambda) > 1) 
+      lambda_i <- lambda[i]
+    if (x[i] == 0) {
+      ll[i] <- log.sum.exp(c(log(p_i), log(1 - p_i) + dpois(x[i], 
+                          lambda_i, TRUE)))
+    }
+    else {
+      ll[i] <- log(1 - p_i) + dpois(x[i], lambda_i, log = TRUE)
+    }
+  }
+  if (log == FALSE) 
+    ll <- exp(ll)
+  return(ll)
+}         
+         
+         
 #==============================================================================================================================
          
          
@@ -3677,20 +3595,22 @@ dens.plot.default <- function(x, adjust = 1, na.rm = TRUE, n = 1e3, from = min(x
 #===================================================================================================================
                 
                 
-count.plot <- function(x, xlab = deparse(substitute(x)), ylab = NA, freq = FALSE, ...)
+count.plot <- function(x, freq = FALSE, type = "h", lwd = 2, lend = 2, xlab = "Trials", ylab = NA, xaxt = "s", add = FALSE, ...)
 {
   UseMethod("count.plot")
 }
 
-                
-count.plot.default <- function(x, xlab = deparse(substitute(x)), ylab = NA, freq = FALSE, ...)
+
+count.plot.default <- function(x, freq = FALSE, type = "h", lwd = 2, lend = 2, xlab = "Outcomes", ylab = NA, xaxt = "s", add = FALSE, ...)
 {  
-  force(xlab)
   x <- sapply(x, round)
   ylab <- if(is.na(ylab) & freq) "Frequency" else if(is.na(ylab) & !freq) "Probability" else ylab
   z <- if(freq) table(x) else table(x)/length(x)
-  plot(z, xlab = xlab, ylab = ylab, ...)
-  invisible(list(x = as.numeric(names(z)), y = as.numeric(z)))
+  x <- as.numeric(names(z))
+  y <- as.numeric(z)
+  graph(x, y, type = type, lwd = lwd, lend = lend, xlab = xlab, ylab = ylab, xaxt = "n", add = add, ...)
+  if(xaxt != "n") axis(1, at = min(x):max(x), labels = if(add) FALSE else TRUE, tick = if(add) FALSE else TRUE)
+  invisible(list(x = x, y = y))
 }
                 
 #=========================================================================================================================
@@ -4264,8 +4184,8 @@ plan.t.tests.default <- function(d = .1, sig.level = .05, power = .8, base.rate 
   
   ylim <- if(is.infinite(ylimb[2]) & is.null(ylim)) NULL else if(is.null(ylim)) ylimb else ylim
   
-  par(mfrow = c(2, 1), mgp = c(2.5, .5, 0), mar = c(4, 4, 2, 2))
-  
+  par(mfrow = c(2, 1), mgp = c(2.5, .5, 0), mar = c(4, 4, 2, 2), tck = -.02)
+      
   h0 <- curve(dcohen(x, 0, n1, n2), from, to, n = 1e4, xlab = xlab, ylab = NA, yaxt = "n", bty = "n", yaxs = "i", ylim = ylim, font.lab = 2)
   
   x1 <- seq(from, a, length.out = 1e3) ; y1 <- dcohen(x1, 0, n1, n2) 
@@ -4424,8 +4344,8 @@ plan.f.tests.default <- function(pov, n.level, design, sig.level = .05, n.pred =
   
   est.power <- ppeta(a, df1, df2, peta, N, lower.tail = FALSE)
   
-  par(mfrow = c(2, 1), mgp = c(2.5, .5, 0), mar = c(4, 4, 2, 2))
-  
+par(mfrow = c(2, 1), mgp = c(2.5, .5, 0), mar = c(4, 4, 2, 2), tck = -.02)
+    
   h0 <- curve(dpeta(x, df1, df2, 0, N), from = 0, to = to, n = 1e4, xlab = xlab, ylab = NA, yaxt = "n", bty = "n", yaxs = "i", ylim = ylim, font.lab = 2)
   
   x = seq(a, to, length.out = 1e3) ; y = dpeta(x, df1, df2, 0, N)
@@ -5326,9 +5246,7 @@ plan.f.cic <- function(peta = .2, design = 2 * 2, n.level = 2, n.covar = 0, conf
   
   data.frame(t(G(peta = peta, conf.level = conf.level, width = width, design = design, n.level = n.level, n.covar = n.covar, regress = regress, pair.design = pair.design, assure = assure)), row.names = NULL)
 } 
-                    
-
-                    
+                                       
                     
 #==========================================================================================================================================================================================================================                    
 
@@ -5356,7 +5274,7 @@ plan.f.ci.default <- function(pov, design = 2 * 2, f = NA, n.level = 2, n.pred =
   if(expect) assure <- .5
   regress <- if(!is.null(n.pred)) TRUE else FALSE
   if(regress) n.level <- n.pred
-  if(!is.na(d)) { pov <- d2peta(d = d, n1 = 300, n2 = 300) ; design <- n.level <- 2 ;
+  if(!is.na(d)) { pov <- d2peta(d = d, n1 = 300, n2 = 300) ; n.level <- 2 ;
   message("\nNote: For 'pairwise' comparisons, 'total.N' is for '2' groups.") }
   if(!is.na(d) & is.na(width)) width <- d.width.meta(lower = lower, upper = upper)
   
@@ -5450,7 +5368,7 @@ plan.f.ci.default <- function(pov, design = 2 * 2, f = NA, n.level = 2, n.pred =
   names(a)[1] <- if(regress) "R2" else if(!is.na(d)) "d" else "peta"
   a[, 1] <- if(is.na(d)) pov else d
   a
-}                                                                                         
+}                                                                                                                       
                     
 #==========================================================================================================================================================================================================================
                     
@@ -5720,95 +5638,86 @@ Anova <- function(eta.sq = .25, n = 5, min.score = 0, max.score = 25, coef = 1.2
       
       
 players <- function(Step = 16, n.Players = 16, n.Steps = 16, step.size = .5, adj = 3){
-
+  
   graphics.off()
   original_par = par(no.readonly = TRUE)
   on.exit(par(original_par))
-
+  
   par(mar = c(2.2, 1.8, 1.5, 1.8) );
   m = matrix( c(1, 1, 1, 1, 1, 1,   2, 2), nrow = 8, ncol = 1 );
   layout(m)
-
+  
   if(n.Players < 2) { n.Players = 2;
   message("\n\tYou can't have less then \"2 players\" on the field.")}
-
+  
   if(Step > n.Steps) { Step = n.Steps;
   message("\n\tYou can't take more steps than what you planned to.\n\tWe picked the maximum steps that you planned to.")}
-
+  
   if(Step < 0 || n.Steps < 1) { Step = 0; n.Steps = 1;
   message("\n\tYou can't have less than \"0\" steps.\n\tAlso, You can't have less than \"1\" as your total steps.")}
-
+  
   plot(-6:6, -6:6, type = "n", axes = F, ann = F)
-
+  
   axis(1, at = c(-6:-1, 1:6), font.axis = 2, cex.axis = 1.5 )
   axis(1, at = 0, font.axis = 2, cex.axis = 1.9, col.axis = 'red' )
-
+  
   par = par('usr')
   rect(par[1], par[3], par[2], par[4], col = 'darkseagreen1' )
-
+  
   points( 0, 0, cex = 7, pch = 20, col = 0)
   points( 0, 0, cex = 40, lwd = 5, col = 0)
   abline(v = 0, lwd = 10, col = 0)
-    
+  
   rect(-6, -6, 6, 6, lwd = 5, border = 0)
   rect(-6.5, -2, -5.5, 2, col = 'darkseagreen1', border = 0, lwd = 5)
   rect(rep(-6.5, 2), rep(-2, 2), rep(-5.5, 2), rep(2, 2), border = 0, density = 10, angle = c(180, 90), col = 0)
-
+  
   rect(6.5, -2, 5.5, 2, col = 'darkseagreen1', border = 0, lwd = 5)
   rect(rep(6.5, 2), rep(-2, 2), rep(5.5, 2), rep(2, 2), border = 0, density = 10, angle = c(180, 90), col = 0)
-
+  
   box(col = 'darkseagreen1')
-
+  
   points( c( rep(par[1]+.01, 2), rep(par[2]-.01, 2) ), rep( c(-2, 2), 2 ), cex = 3, pch = 20, col = 0 )
-
+  
   x <- rep(0, n.Players)                       ## Initial position of players
   y <- seq(from = -6, to = 6, len = n.Players) ## y-position for players
-
+  
   ## Sample movement of players:
   xStepsMx <- matrix(sample(c(-1, 1)*step.size, n.Players*n.Steps, replace = TRUE),
                      nrow = n.Players, ncol = n.Steps)
-
+  
   ## Position of players:
   xPosMx <- t(sapply(1:nrow(xStepsMx), function(ii) cumsum(xStepsMx[ii,]))) + x
-
+  
   positions = if (Step > 0){ xPosMx[,Step] } else {  x  }
-
+  
   segments(positions, y, 0, y, lty = 2, col = 'red')
   points(positions, y, cex = 7, lwd = 3, pch = 21, bg = "white")
   text(positions, y, 1:n.Players, font = 2, cex = 1.5)
-
+  
   if (Step == 0) {
-
+    
     plot(1, 1, ty = 'n', axes = F, ann = F)
-
+    
     text(1, 1, "Let players take at least \"1\" step on the field.", cex = 2.5, font = 2, col = 'red4')
-
+    
   } else {
     par( mar = c(3.5, 4, 2, 2.1), mgp = c(2, .5, 0) )
-
+    
     DENS = density(positions, adjust = adj, n = 1e4)
 
-    x.DENS = DENS$x
-    y.DENS = DENS$y
-
-    plot( DENS, col = 'red', lwd = 3, xaxt = "n", xlab = "Distance Travelled",
-         ylab = "Probability", font.axis = 2, font.lab = 2, xlim = c(-6, 6), main = NA, bty = 'n',
-         zero.line = F)
-
-    low.exterme = par('usr')[3]
-
-    x.DENS.2 = seq(-6, 6)
-    y.DENS.2 = approx(x.DENS, y.DENS, xout = x.DENS.2 )
-
-    points( y.DENS.2, col = 'blue', cex = 2, type = "h")
-
+    plot( table(positions)/length(positions), col = 2, lwd = 3, xaxt = "n", xlab = "Positions", lend = 1,
+          ylab = "Probability", font.axis = 2, font.lab = 2, xlim = c(-6, 6), main = NA, bty = 'n', yaxs = "i")
+    
+    lines(DENS, col = 4, lwd = 2)
+    
     polygon(DENS, col = rgb(0, 1, 1, .1), border = NA )
-
+    
     axis(1, at = seq(-6, 6, len = 13), xlab = 'positions', font = 2, cex.axis = 1.2 )
-
+    
     legend("topleft", legend = c(paste("Steps Taken = ", Step), paste("Players =", n.Players) ),
            bty="n", inset = c(-.02, .01), text.font=2, text.col = 'red4', cex = 1.5)
-    }
+  }
 }
                      
 #======================================================================================================================
@@ -6501,14 +6410,61 @@ plan.mrm.default <- function(peta, n.rep, n.group, factor.type = c("between", "w
     list(peta = peta, total.N = N, balanced.N = balanced.N, factor.type = factor.type, n.group = n.group, n.rep = n.rep, n.covar = n.covar, sig.level = sig.level, crit.peta = a, est.power = est.power)
   })
   
-  data.frame(t(G(peta = peta, n.rep = n.rep, n.group = n.group, factor.type = factor.type, sig.level = sig.level, 
+  a <- data.frame(t(G(peta = peta, n.rep = n.rep, n.group = n.group, factor.type = factor.type, sig.level = sig.level, 
                  n.covar = n.covar, power = power, eps = eps, rho = rho, d = d)))
   
+  names(a)[1] <- if(!is.na(d)) "d" else "peta"
+  a[, 1] <- if(is.na(d)) peta else d
+  a
 }
                           
 #===========================================================================================================================
+          
                
+rrbinom <- function(n, size, p1, p2, rho = 0){
+  
+  UseMethod("rrbinom")
+  
+}
                
+rrbinom.default <- function(n, size, p1, p2, rho = 0){
+
+p <- p1
+q <- p2
+
+a <- function(rho, p, q) {
+  rho * sqrt(p*q*(1-p)*(1-q)) + (1-p)*(1-q)
+}
+
+a.0 <- a(rho, p, q)
+
+prob <- c(`(0,0)`= a.0, `(1,0)`= 1-q-a.0, `(0,1)`= 1-p-a.0, `(1,1)`= a.0+p+q-1)
+if(min(prob) < 0) {
+  print(prob)
+  stop("A probability is negative.", call. = FALSE)
+}
+
+u <- sample.int(4, n * size, replace = TRUE, prob = prob)
+y <- floor((u-1)/2)
+x <- 1 - u %% 2
+x <- colSums(matrix(x, nrow = size)) 
+y <- colSums(matrix(y, nrow = size)) 
+
+list(x = x, y = y)
+
+}              
+               
+#===========================================================================================================================
+               
+rzpois <- function (n, p, lambda) 
+{
+  z <- rbinom(n, 1, p)
+  (1 - z) * rpois(n, lambda)
+}               
+               
+#===========================================================================================================================
+               
+            
 pre.post.cont <- function(n1 = 12, n2 = 12, min.score = 0, max.score = 25, subjects = TRUE, conf.level = .95,
                           descriptives = TRUE, correlation = .7, effect.size = 1, digits = 6, ...){
   
@@ -6636,15 +6592,1468 @@ pre.post.cont <- function(n1 = 12, n2 = 12, min.score = 0, max.score = 25, subje
 } 
 
 #===========================================================================================================================
-                     
-need <- c("rstanarm")  #, "arrangements", "gsl")
+               
+
+model.ci <- function(fit, level = .95){
+  
+  est <- coef(fit)
+  se <- summary(fit)$coef[, 2]
+  
+  n <- length(est)
+  mat <- matrix(c(rep(-1, n), rep(1, n)), nrow = n)
+  
+  p <- (1 - level)/2
+  z <- -qnorm(p)
+  ci <- est + mat * (se * z)
+  rownames(ci) <- names(est)
+  col1 <- paste0(format(p * 1e2, nsmall = 1), "%")
+  col2 <- paste0(format((1 - p) * 1e2, nsmall = 1), "%")
+  colnames(ci) <- c(col1, col2)
+  ci
+}              
+
+
+#===========================================================================================================================
+               
+               
+d.curve <- dcurve <- function(d = seq(0,2,.5), n1 = 30, n2 = NA, biased = TRUE, labels = TRUE){
+  
+  
+  if(!biased) d <- exp2d(d, n1, n2)
+  options(warn = -1) ; d = sort(d)
+  min.d = qcohen(1e-5, min(d), n1, n2)  ;  max.d = qcohen(.99999, max(d), n1, n2)  
+  
+  for(i in 1:length(d)){      
+    H = curve(dcohen(x, d[i], n1, n2), min.d, max.d, n = 1e3, xlab = "Effect Size (d)", 
+              ylab = NA, type = "n", add = i!= 1, bty = "n", axes = FALSE, font.lab = 2, yaxs = "i")
+    
+    polygon(H, col = adjustcolor(i, .7), border = NA, xpd = NA)
+    if(labels) text(d[i], max(H$y), bquote(bolditalic(H[.(i-1)])), pos = 3, xpd = NA)
+    axis(1, at = round(d[i], 3), col = i, col.axis = i, font = 2)
+    segments(d[i], 0, d[i], dcohen(d[i], d[i], n1, n2), lty = 3)
+  }
+}
+               
+#===========================================================================================================================
+               
+               
+pov.curve <- povcurve <- function(pov = seq(0, .5, .1), df1 = 3, df2 = 73, N = 78, biased = TRUE, labels = TRUE){
+  
+  if(!biased) pov <- exp2peta(pov, df1, df2, N)
+  
+  options(warn = -1) ; p = sort(pov)
+  max.p = qpeta(.999999, df1, df2, max(p), N)  
+  
+  for(i in 1:length(p)){      
+    H = curve(dpeta(x, df1, df2, p[i], N), 0, max.p, n = 1e3, xlab = "Effect Size (POV)",
+              ylab = NA, type = "n", add = i!= 1, bty = "n", axes = FALSE, font.lab = 2, yaxs = "i")
+    
+    polygon(H, col = adjustcolor(i, .7), border = NA, xpd = NA)
+    if(labels) text(p[i], max(H$y), bquote(bolditalic(H[.(i-1)])), pos = 3, xpd = NA)
+    axis(1, at = round(p[i], 3), col = i, col.axis = i, font = 2)
+    segments(p[i], 0, p[i], dpeta(p[i], df1, df2, p[i], N), lty = 3)
+  }
+}               
+               
+               
+#===========================================================================================================================
+               
+               
+random <- function(N, n.groups, keep = FALSE)
+{
+  UseMethod("random")
+}
+               
+               
+random.default <- function(N, n.groups, keep = FALSE){
+  
+  r <- lapply(list(N, n.groups), round)
+  N <- r[[1]]
+  n.groups <- r[[2]]
+  
+  n <- N
+  N <- ceiling(N/n.groups) * n.groups
+  n.set <- N/n.groups
+  
+  if(keep) set.seed(9036)
+  a <- sample(rep(seq_len(n.groups), n.set))
+  b <- table(if(n != N) head(a, -(N - n)) else a, dnn = NULL)
+  if(n != N) a[(n+1):N] <- NA
+  a <- matrix(a, n.groups, n.set)
+  
+  a[] <- sprintf("%s%d: %d", "p", seq_len(N), a)
+  rownames(a) <- rep(" ", n.groups)
+  colnames(a) <- rep(" ", n.set)
+  
+  list(Assignments = noquote(a), Groups = b)
+}
+
+               
+#===========================================================================================================================
+
+
+random.block <- Vectorize(function(N, n.groups, keep = FALSE){
+  
+  N <- ceiling(N/n.groups) * n.groups
+  n.set <- N/n.groups  
+  
+  if(keep) set.seed(9036)
+  
+  a <- replicate(n.set, sample(seq_len(n.groups)))
+  colnames(a) <- paste0("block", seq_len(n.set))  
+  a[] <- sprintf("%s%d: %d", "p", seq_len(N), a)
+  rownames(a) <- rep(" ", n.groups)
+  noquote(a)
+  
+}, SIMPLIFY = FALSE)              
+               
+               
+#===========================================================================================================================
+             
+
+plot.pr <- function(fun = dbinom(0:5, 5, .1), type = "h", lwd = 2, lend = 2, xlab = "Outcomes", ylab = "Probability", xaxt = "s", add = FALSE, ...)
+{
+  x <- match.call()$fun
+  if(class(x) == "call") x <- as.numeric(as.character(x[[2]])) else stop("Use an appropriate R function for count probability distributions.", call. = FALSE)
+  graph(x[2]:x[3], fun, type = type, lwd = lwd, lend = lend, xlab = xlab, ylab = ylab, xaxt = "n", add = add, ...)
+  if(xaxt != "n") axis(1, at = x[2]:x[3], labels = if(add) FALSE else TRUE, tick = if(add) FALSE else TRUE)
+}              
+             
+
+#===========================================================================================================================    
+    
+
+dens.curve <- function(..., adjust = 1, na.rm = TRUE, n = 1e3, hdi = FALSE, ci = FALSE, level = .95, xlab = "x", main = NA, lwd = 2, lty = 1, col = FALSE, ylim = NA, labels = TRUE){
+  
+  L <- if(all(sapply(list(...), inherits, "data.frame"))) as.list(...) else list(...)
+  a <- list() 
+  m <- if(all(sapply(list(...), inherits, "data.frame"))) names(L) else substitute(...())
+  
+  y <- max(sapply(L, function(x) max(density(x, adjust = adjust, na.rm = na.rm, n = n)$y)))
+    
+  for(i in 1:length(L)){
+    
+    a[[i]] <- dens.plot(L[[i]], add = i!= 1, adjust = adjust, na.rm = na.rm, n = n, from = min(L[[i]]), to = max(L[[i]]), hdi = hdi, ci = ci, level = level, xlab = xlab, main = main, lwd = lwd, lty = lty, col = if(col) col[i] else i, ylim = if(is.na(ylim)) c(0, y) else ylim)
+    
+    if(labels) text(a[[i]]$mode, max(a[[i]]$y), m[[i]], pos = 3, cex = .8, font = 2, col = if(col) col[i] else i, xpd = NA)
+  }
+  return(invisible(a))
+}                      
+                       
+                       
+#===========================================================================================================================
+                       
+                       
+c2fac <- function(x, breaks = NULL) {
+   if(is.null(breaks)) breaks <- unique(quantile(x, 0:10/10))
+   x <- cut(x, breaks, include.lowest = TRUE, right = FALSE)
+   levels(x) <- paste0(breaks[-length(breaks)], ifelse(diff(breaks) > 1,
+   c(paste("-", breaks[-c(1, length(breaks))] - 1, sep = ""), "+"), ""))
+   return(x)
+   }    
+
+                       
+#=====================================================================
+
+dgammab <- function (x, mu, scale, log = FALSE) 
+{
+  dgamma(x, shape = mu/scale, scale = scale, log = log)
+}
+
+#=====================================================================
+
+rgammab <- function (n, mu, scale) 
+{
+  rgamma(n, shape = mu/scale, scale = scale)
+}
+
+#=====================================================================
+
+dgampois <- function (x, mu, scale, log = FALSE) 
+{
+  shape <- mu/scale
+  prob <- 1/(1 + scale)
+  dnbinom(x, size = shape, prob = prob, log = log)
+}
+
+#=====================================================================
+
+rgampois <- function (n, mu, scale) 
+{
+  shape <- mu/scale
+  prob <- 1/(1 + scale)
+  rnbinom(n, size = shape, prob = prob)
+}
+
+                    
+#=========================================================================
+                    
+decimal <- function(x, k = 3) format(round(x, k), nsmall = k) 
+
+#==========================================================================
+                    
+denscurve <- function(..., adjust = 1, na.rm = TRUE, n = 1e3, hdi = FALSE, level = .95, xlab = "x", ylim = NA, xlim = NA, labels = NA, bottom = 1, top = 1, scale = 1){
+  
+  L <- if(all(sapply(list(...), inherits, "data.frame"))) as.list(...) else list(...)
+  lab <- if(all(sapply(list(...), inherits, "data.frame"))) names(L) else substitute(...())
+  
+  loop <- length(L)
+  soop <- seq_len(loop)
+  
+  a <- lapply(L, function(x) density(x, adjust = adjust, na.rm = na.rm, n = n))
+
+  from <- numeric(loop)
+  to <- numeric(loop)
+  hi <- numeric(loop)
+  if(hdi) CI <- matrix(NA, loop, 2)
+  mode <- numeric(loop)
+  
+  for(i in soop){
+    from[i] <- min(a[[i]]$x)
+    to[i] <- max(a[[i]]$x)
+    hi[i] <- max(a[[i]]$y)
+    if(hdi) CI[i,] <- hdir(L[[i]], level = level)
+    mode[i] <- a[[i]]$x[which.max(a[[i]]$y)]
+  }
+  
+  f = hi + soop
+  m = scale*hi + soop
+  
+  plot(rep(soop, 2), rep(soop, 2), type = "n", xlim = if(is.na(xlim)) c(min(from), max(to)) else xlim, ylim = if(is.na(ylim)) c(bottom*1, top*max(f)) else ylim, ylab = NA, yaxt = "n", xlab = xlab, mgp = c(2, .3, 0))
+  axis(2, at = soop, labels = if(is.na(labels)) lab else labels, font = 2, las = 1, cex.axis = .8, tck = -.012, mgp = c(2, .3, 0), padj = rep(.35, loop))
+  abline(h = soop, col = 8, lty = 3)
+  
+  for(i in soop){
+  polygon(x = a[[i]]$x, y = scale*a[[i]]$y +i, col = adjustcolor(i, .4), border = NA, xpd = NA)
+  }
+ 
+if(hdi){   
+  segments(CI[, 1], soop, CI[, 2], soop, lend = 1, lwd = 4, col = soop, xpd = NA)                            
+  segments(mode, soop, mode, m, lty = 3, xpd = NA, lend = 1)  
+  points(mode, soop, pch = 21, bg = "cyan", cex = 1.3, col = "magenta", xpd = NA)
+  I = decimal(CI, 2); o = decimal(mode, 2)
+  text(c(CI[,1], o, CI[,2]), soop, c(I[,1], o, I[,2]), pos = 3, font = 2, cex = .8, xpd = NA)
+}  
+  return(invisible(a))
+}                                 
+
+#===========================================================================================================================
+       
+plot.count <- function(..., freq = FALSE, type = "h", lwd = 2, lend = 2, col = NA, col.adj = 1, xlab = "Outcomes", ylab = NA, xaxt = "s", labels = NA, cex.lab = .8, yaxt = "s", xaxs = "r", yaxs = "r", x.same = FALSE, y.same = FALSE, digits = 1e2){
+  
+  L <- if(all(sapply(list(...), inherits, "data.frame"))) as.list(...) else list(...)
+  m <- if(all(sapply(list(...), inherits, "data.frame"))) names(L) else substitute(...())
+  
+  y <- lapply(L, function(x) if(freq)table(x) else table(x)/length(x))
+  x <- lapply(y, function(x) as.numeric(names(x)))
+  
+  xlim <- if(x.same) range(x, finite = TRUE) else NULL
+  ylim <- if(y.same) range(y, finite = TRUE) else NULL
+  
+  ylab <- if(is.na(ylab) & freq) "Frequency" else if(is.na(ylab) & !freq) "Probability" else ylab
+  h <- length(L)
+  
+  graphics.off()             
+  org.par <- par(no.readonly = TRUE)
+  on.exit(par(org.par))
+  
+  if(h > 1L) { par(mfrow = n2mfrow(h)) ; set.margin2()}
+  
+  for(i in 1:h){
+    
+    plot(x[[i]], y[[i]], type = type, lend = lend, xlab = xlab, lwd = lwd, ylab = ylab, col = if(is.na(col)) adjustcolor(i, col.adj) else adjustcolor(col[i], col.adj), ylim = ylim, xlim = xlim, xaxt = "n", yaxt = "n", xaxs = xaxs, yaxs = yaxs)
+    
+    mtext(if(is.na(labels)) m[[i]] else labels[i], cex = cex.lab, font = 2, col = if(is.na(col)) i else col[i], xpd = NA)
+    
+    if(xaxt != "n") axis(1, at = x[[i]][round(y[[i]], digits) != 0])
+    if(yaxt != "n") axis(2)
+  }
+}
+
+#===========================================================================================================================
+                                 
+mode.count <- function(x){
+  
+  z <- table(x)
+  x <- as.numeric(names(z))
+  y <- as.numeric(z)
+  x[which.max(y)]
+}       
+
+#===========================================================================================================================                                 
+                                 
+dzbinom <- function (x, p.zero, size, prob, log = FALSE) 
+{
+  ll <- numeric(length(x))
+  pz_i <- p.zero[1]
+  size_i <- size[1]
+  prob_i <- prob[1]
+  for (i in 1:length(x)) {
+    if (length(p.zero) > 1) 
+      pz_i <- p.zero[i]
+    if (length(size) > 1) 
+      size_i <- size[i]
+    if (length(prob) > 1) 
+      prob_i <- prob[i]
+    if (x[i] == 0) {
+      ll[i] <- log.sum.exp(c(log(pz_i), log(1 - pz_i) + 
+                               dbinom(x[i], size_i, prob_i, TRUE)))
+    }
+    else {
+      ll[i] <- log(1 - pz_i) + dbinom(x[i], size_i, prob_i, 
+                                      TRUE)
+    }
+  }
+  if (log == FALSE) 
+    ll <- exp(ll)
+  return(ll)
+}
+
+#===========================================================================================================================
+
+rzbinom <- function (n, p.zero, size, prob) 
+{
+  z <- rbinom(n, size = 1, prob = p.zero)
+  (1 - z) * rbinom(n, size, prob)
+  
+}                                 
+ 
+#===========================================================================================================================
+         
+         
+mode.find <- function(x, y, na.rm = TRUE, finite = TRUE){
+  
+x <- x[if(na.rm) !is.na(x) & if(finite) !is.infinite(x)]
+y <- y[if(na.rm) !is.na(y) & if(finite) !is.infinite(y)]  
+
+  x[which.max(y)]
+}
+
+       
+#===========================================================================================================================
+       
+       
+at.set <- function(x, y, axis.tol, simplify = TRUE){
+  
+  y <- lapply(y, round, digits = axis.tol)
+  
+  x <- mapply(function(u, v) u[v != 0], x, y, SIMPLIFY = FALSE)
+  
+  smallest.max <- which.min(sapply(x, max))
+  
+  x <- c(x[smallest.max], x[-smallest.max])
+  
+  x[-1] <- mapply(setdiff, x[-1], x[-length(x)], SIMPLIFY = FALSE)
+  
+  if(simplify) as.numeric(unlist(x)) else x
+}
+
+#===========================================================================================================================
+
+set.margin2 <- function() 
+{
+    par(mgp = c(1.5, 0.5, 0), mar = c(2.5, 2.5, 2, 1) + .1, 
+        tck = -0.02)
+  }
+
+#===========================================================================================================================
+              
+plot.prob <- function(..., type = "h", lwd = 2, lend = 2, xlab = "Outcomes", ylab = "Probability", xaxt = "s", col = NA, col.adj = 1, labels = NA, cex.lab = .8, yaxt = "s", xaxs = "r", yaxs = "r", x.same = FALSE, y.same = FALSE, digits = 1e2){
+  
+  x <- match.call()[-1]
+  y <- lapply(x, eval)
+  if(!is.null(names(y))) y <- y[names(y) == ""]
+  m <- substitute(x)
+  L <- length(y)
+  x <- lapply(1:L, function(i) eval(parse(text = as.character(x[[i]])[2])))
+  
+  xlim <- if(x.same) range(x, finite = TRUE) else NULL
+  ylim <- if(y.same) range(y, finite = TRUE) else NULL
+  
+  graphics.off()             
+  org.par <- par(no.readonly = TRUE)
+  on.exit(par(org.par))
+  
+  if(L > 1L) { par(mfrow = n2mfrow(L)) ; set.margin2()}
+  
+  for(i in 1:L){
+    
+    plot(x[[i]], y[[i]], type = type, lwd = lwd, lend = lend, xlab = xlab, ylab = ylab, xaxt = "n", ylim = ylim, xlim = xlim, col = if(is.na(col)) adjustcolor(i, col.adj) else adjustcolor(col[i], col.adj), yaxt = "n", xaxs = xaxs, yaxs = yaxs)
+    
+    mtext(if(is.na(labels)) m[[i]] else labels[i], cex = cex.lab, font = 2, col = if(is.na(col)) i else col[i], xpd = NA)
+    
+    if(xaxt != "n") axis(1, at = x[[i]][round(y[[i]], digits) != 0])
+    if(yaxt != "n") axis(2)
+  }
+}     
+              
+
+
+#===========================================================================================================================
+                                                                            
+                                                                            
+order.list <- function(x, decreasing = FALSE, na.rm = TRUE, finite = FALSE){
+  
+  if(na.rm) x <- Map(Filter, list(Negate(is.na)), x)
+  if(finite) x <- Map(Filter, list(Negate(is.infinite)), x)
+  
+  maxs <- sapply(x, max) 
+  result <- list()
+  i <- 1
+  while(length(maxs) > 0){
+    result[[i]] <- x[[which.max(maxs)]]
+    x <- x[-which.max(maxs)]
+    maxs <- maxs[-which.max(maxs)]
+    i <- i+1
+  }
+
+if(decreasing) result else rev(result)
+}
+            
+ 
+#===========================================================================================================================         
+ 
+compare.model <- function(..., digits = 1e2){
+  
+  L <- list(...)
+  if(length(L) < 2) stop("You need to have a least '2' fitted models for a comparison.", call. = FALSE)
+  names(L) <- substitute(...())
+  combs <- t(combn(x = names(L), m = 2))
+  
+  p.value <- round(apply(combs, 1, function(i) pchisq(2 * abs(logLik(L[[i[2]]]) - logLik(L[[i[1]]])), df = abs(L[[i[1]]]$df.residual - L[[i[2]]]$df.residual), lower.tail = FALSE)), digits)
+  result <- data.frame(combs, p.value)
+  names(result) <- c("model.1", "model.2", "p.value")
+  
+  Sig. <- symnum(result$p.value, cut = c(0, .001, .01, .05, .1, 1), na = FALSE, symbols = c("***", "**", "*", ":-(", ":-(("), corr = FALSE)
+  output <- cbind(result, Sig.)
+  names(output)[4] <- " "
+  cat("\nSignif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 ':-(' 0.1 ':-((' 1\n-------------\n") 
+  return(output)
+}
+    
+#===========================================================================================================================
+                         
+BICz <- function(...) {
+  
+  a <- AIC(..., k = sapply(list(...), function(x) log(nrow(model.frame(x)))))
+  
+  if(length(a) >= 2){
+  names(a)[2] <- "BIC"
+  a[,1] <- NULL
+  rownames(a) <- as.character(substitute(...()))
+  }
+  a
+}                         
+                                                  
+#===========================================================================================================================                   
+                   
+is.false <- function(x) identical(FALSE, x)
+
+#===========================================================================================================================
+                           
+test.dist <- fitdistr <- function (x, densfun, start, ...) 
+{
+  myfn <- function(parm, ...) -sum(log(dens(parm, ...)))
+  mylogfn <- function(parm, ...) -sum(dens(parm, ..., log = TRUE))
+  mydt <- function(x, m, s, df, log) dt((x - m)/s, df, log = TRUE) - 
+    log(s)
+  Call <- match.call(expand.dots = TRUE)
+  if (missing(start)) 
+    start <- NULL
+  dots <- names(list(...))
+  dots <- dots[!is.element(dots, c("upper", "lower"))]
+  if (missing(x) || length(x) == 0L || mode(x) != "numeric") 
+    stop("'x' must be a non-empty numeric vector")
+  if (any(!is.finite(x))) 
+    stop("'x' contains missing or infinite values")
+  if (missing(densfun) || !(is.function(densfun) || is.character(densfun))) 
+    stop("'densfun' must be supplied as a function or name")
+  control <- list()
+  n <- length(x)
+  if (is.character(densfun)) {
+    distname <- tolower(densfun)
+    densfun <- switch(distname, beta = dbeta, cauchy = dcauchy, 
+      `chi-squared` = dchisq, exponential = dexp, f = df, 
+      gamma = dgamma, geometric = dgeom, `log-normal` = dlnorm, 
+      lognormal = dlnorm, logistic = dlogis, `negative binomial` = dnbinom, 
+      normal = dnorm, poisson = dpois, t = mydt, weibull = dweibull, 
+      NULL)
+    if (is.null(densfun)) 
+      stop("unsupported distribution")
+    if (distname %in% c("lognormal", "log-normal")) {
+      if (!is.null(start)) 
+        stop(gettextf("supplying pars for the %s distribution is not supported", 
+          "log-Normal"), domain = NA)
+      if (any(x <= 0)) 
+        stop("need positive values to fit a log-Normal")
+      lx <- log(x)
+      sd0 <- sqrt((n - 1)/n) * sd(lx)
+      mx <- mean(lx)
+      estimate <- c(mx, sd0)
+      sds <- c(sd0/sqrt(n), sd0/sqrt(2 * n))
+      names(estimate) <- names(sds) <- c("meanlog", "sdlog")
+      vc <- matrix(c(sds[1]^2, 0, 0, sds[2]^2), ncol = 2, 
+        dimnames = list(names(sds), names(sds)))
+      names(estimate) <- names(sds) <- c("meanlog", "sdlog")
+      return(structure(list(estimate = estimate, sd = sds, 
+        vcov = vc, n = n, loglik = sum(dlnorm(x, mx, 
+          sd0, log = TRUE))), class = "fitdistr"))
+    }
+    if (distname == "normal") {
+      if (!is.null(start)) 
+        stop(gettextf("supplying pars for the %s distribution is not supported", 
+          "Normal"), domain = NA)
+      sd0 <- sqrt((n - 1)/n) * sd(x)
+      mx <- mean(x)
+      estimate <- c(mx, sd0)
+      sds <- c(sd0/sqrt(n), sd0/sqrt(2 * n))
+      names(estimate) <- names(sds) <- c("mean", "sd")
+      vc <- matrix(c(sds[1]^2, 0, 0, sds[2]^2), ncol = 2, 
+        dimnames = list(names(sds), names(sds)))
+      return(structure(list(estimate = estimate, sd = sds, 
+        vcov = vc, n = n, loglik = sum(dnorm(x, mx, 
+          sd0, log = TRUE))), class = "fitdistr"))
+    }
+    if (distname == "poisson") {
+      if (!is.null(start)) 
+        stop(gettextf("supplying pars for the %s distribution is not supported", 
+          "Poisson"), domain = NA)
+      estimate <- mean(x)
+      sds <- sqrt(estimate/n)
+      names(estimate) <- names(sds) <- "lambda"
+      vc <- matrix(sds^2, ncol = 1, nrow = 1, dimnames = list("lambda", 
+        "lambda"))
+      return(structure(list(estimate = estimate, sd = sds, 
+        vcov = vc, n = n, loglik = sum(dpois(x, estimate, 
+          log = TRUE))), class = "fitdistr"))
+    }
+    if (distname == "exponential") {
+      if (any(x < 0)) 
+        stop("Exponential values must be >= 0")
+      if (!is.null(start)) 
+        stop(gettextf("supplying pars for the %s distribution is not supported", 
+          "exponential"), domain = NA)
+      estimate <- 1/mean(x)
+      sds <- estimate/sqrt(n)
+      vc <- matrix(sds^2, ncol = 1, nrow = 1, dimnames = list("rate", 
+        "rate"))
+      names(estimate) <- names(sds) <- "rate"
+      return(structure(list(estimate = estimate, sd = sds, 
+        vcov = vc, n = n, loglik = sum(dexp(x, estimate, 
+          log = TRUE))), class = "fitdistr"))
+    }
+    if (distname == "geometric") {
+      if (!is.null(start)) 
+        stop(gettextf("supplying pars for the %s distribution is not supported", 
+          "geometric"), domain = NA)
+      estimate <- 1/(1 + mean(x))
+      sds <- estimate * sqrt((1 - estimate)/n)
+      vc <- matrix(sds^2, ncol = 1, nrow = 1, dimnames = list("prob", 
+        "prob"))
+      names(estimate) <- names(sds) <- "prob"
+      return(structure(list(estimate = estimate, sd = sds, 
+        vcov = vc, n = n, loglik = sum(dgeom(x, estimate, 
+          log = TRUE))), class = "fitdistr"))
+    }
+    if (distname == "weibull" && is.null(start)) {
+      if (any(x <= 0)) 
+        stop("Weibull values must be > 0")
+      lx <- log(x)
+      m <- mean(lx)
+      v <- var(lx)
+      shape <- 1.2/sqrt(v)
+      scale <- exp(m + 0.572/shape)
+      start <- list(shape = shape, scale = scale)
+      start <- start[!is.element(names(start), dots)]
+    }
+    if (distname == "gamma" && is.null(start)) {
+      if (any(x < 0)) 
+        stop("gamma values must be >= 0")
+      m <- mean(x)
+      v <- var(x)
+      start <- list(shape = m^2/v, rate = m/v)
+      start <- start[!is.element(names(start), dots)]
+      control <- list(parscale = c(1, start$rate))
+    }
+    if (distname == "negative binomial" && is.null(start)) {
+      m <- mean(x)
+      v <- var(x)
+      size <- if (v > m) 
+        m^2/(v - m)
+      else 100
+      start <- list(size = size, mu = m)
+      start <- start[!is.element(names(start), dots)]
+    }
+    if (is.element(distname, c("cauchy", "logistic")) && 
+      is.null(start)) {
+      start <- list(location = median(x), scale = IQR(x)/2)
+      start <- start[!is.element(names(start), dots)]
+    }
+    if (distname == "t" && is.null(start)) {
+      start <- list(m = median(x), s = IQR(x)/2, df = 10)
+      start <- start[!is.element(names(start), dots)]
+    }
+  }
+  if (is.null(start) || !is.list(start)) 
+    stop("'start' must be a named list")
+  nm <- names(start)
+  f <- formals(densfun)
+  args <- names(f)
+  m <- match(nm, args)
+  if (any(is.na(m))) 
+    stop("'start' specifies names which are not arguments to 'densfun'")
+  formals(densfun) <- c(f[c(1, m)], f[-c(1, m)])
+  dens <- function(parm, x, ...) densfun(x, parm, ...)
+  if ((l <- length(nm)) > 1L) 
+    body(dens) <- parse(text = paste("densfun(x,", paste("parm[", 
+      1L:l, "]", collapse = ", "), ", ...)"))
+  Call[[1L]] <- quote(stats::optim)
+  Call$densfun <- Call$start <- NULL
+  Call$x <- x
+  Call$par <- start
+  Call$fn <- if ("log" %in% args) 
+    mylogfn
+  else myfn
+  Call$hessian <- TRUE
+  if (length(control)) 
+    Call$control <- control
+  if (is.null(Call$method)) {
+    if (any(c("lower", "upper") %in% names(Call))) 
+      Call$method <- "L-BFGS-B"
+    else if (length(start) > 1L) 
+      Call$method <- "BFGS"
+    else Call$method <- "Nelder-Mead"
+  }
+  res <- eval.parent(Call)
+  if (res$convergence > 0L) 
+    stop("optimization failed")
+  vc <- solve(res$hessian)
+  sds <- sqrt(diag(vc))
+  structure(list(estimate = res$par, sd = sds, vcov = vc, 
+    loglik = -res$value, n = n), class = "fitdistr")
+}
+
+#===========================================================================================================================
+                           
+plot.c.model <- function(object, max = max(object$model[,1]), scale = "raw", ...) {
+  UseMethod("rootogram")
+}
+
+plot.c.model.default <- function(object, fitted, breaks = NULL,
+                              style = c("hanging", "standing", "suspended"),
+                              scale = c("sqrt", "raw"), plot = TRUE,
+                              width = 0, xlab = NULL, ylab = NULL, main = NULL, ...)
+{
+  ## rectangle style
+  scale <- match.arg(scale)
+  style <- match.arg(style)
+  
+  ## default annotation
+  if(is.null(xlab)) {
+    xlab <- if(is.null(names(dimnames(object)))) {
+      deparse(substitute(object))
+    } else {
+      names(dimnames(object))[1L]
+    }
+  }
+  if(is.null(ylab)) {
+    ylab <- if(scale == "raw") "Frequency" else "sqrt(Frequency)" 
+  }
+  if(is.null(main)) main <- deparse(substitute(fitted))
+  
+  ## breaks, midpoints, widths
+  if(is.null(breaks)) {
+    x <- as.numeric(names(object))
+    if(length(x) < 1L) x <- 0L:(length(object) - 1L)
+    breaks <- (head(x, -1L) + tail(x, -1L))/2
+    breaks <- c(2 * head(x, 1L) - head(breaks, 1L), breaks,
+                2 * tail(x, 1L) - tail(breaks, 1L))
+    if(is.null(width)) width <- 0.9
+  } else {
+    x <- (head(breaks, -1L) + tail(breaks, -1L))/2
+    if(is.null(width)) width <- 1
+  }
+  
+  ## raw vs. sqrt scale
+  if(scale == "sqrt") {
+    obsrvd <- sqrt(as.vector(object))
+    expctd <- sqrt(as.vector(fitted))
+  } else {
+    obsrvd <- as.vector(object)
+    expctd <- as.vector(fitted)
+  }
+  
+  ## height/position of rectangles
+  y <- if(style == "hanging") expctd - obsrvd else 0
+  height <- if(style == "suspended") expctd - obsrvd else obsrvd
+  
+  ## collect everything as data.frame
+  rval <- data.frame(observed = as.vector(object), expected = as.vector(fitted),
+                     x = x, y = y, width = diff(breaks) * width, height = height,
+                     line = expctd)
+  attr(rval, "style") <- style
+  attr(rval, "scale") <- scale
+  attr(rval, "xlab") <- xlab
+  attr(rval, "ylab") <- ylab
+  attr(rval, "main") <- main
+  class(rval) <- c("rootogram", "data.frame")
+  
+  ## also plot by default
+  if(plot) plot(rval, ...)
+  
+  ## return invisibly
+  invisible(rval)
+}
+
+
+plot.rootogram <- function(x,
+                           xlim = NULL, ylim = NULL, xlab = NULL, ylab = NULL, main = NULL,
+                           border = "black", fill = "lightgray", col = "#B61A51",
+                           lwd = 2, pch = 19, lty = 1, max = NULL, type = NULL, axes = TRUE, ...)
+{
+  ## handling of groups
+  if(is.null(x$group)) x$group <- 1L
+  n <- max(x$group)
+  if(is.null(type)) type <- ifelse(any(table(x$group) > 20L), "l", "b")
+  
+  ## annotation
+  if(is.null(xlab)) xlab <- TRUE
+  if(is.null(ylab)) ylab <- TRUE
+  if(is.null(main)) main <- TRUE
+  xlab <- rep(xlab, length.out = n)
+  ylab <- rep(ylab, length.out = n)
+  main <- rep(main, length.out = n)
+  if(is.logical(xlab)) xlab <- ifelse(xlab, attr(x, "xlab"), "")
+  if(is.logical(ylab)) ylab <- ifelse(ylab, attr(x, "ylab"), "")
+  if(is.logical(main)) main <- ifelse(main, attr(x, "main"), "")
+  
+  ## plotting function
+  rootogram1 <- function(d, ...) {
+    ## rect elements
+    xleft <- d$x - d$width/2
+    xright <- d$x + d$width/2
+    ybottom <- d$y
+    ytop <- d$y + d$height
+    j <- unique(d$group)
+    
+    ## defaults
+    if(is.null(xlim)) xlim <- range(c(xleft, xright))
+    if(is.null(ylim)) ylim <- range(c(ybottom, ytop, d$line))
+    
+    ## draw rootogram
+    plot(0, 0, type = "n", xlim = xlim, ylim = ylim,
+         xlab = xlab[j], ylab = ylab[j], main = main[j], axes = FALSE, ...)
+    if(axes) {
+      axis(1, at = d$x)
+      axis(2)
+    }
+    rect(xleft, ybottom, xright, ytop, border = border, col = fill)
+    abline(h = 0, col = border, lty = 3)
+    lines(d$x, d$line,
+          col = col, pch = pch, type = type, lty = lty, lwd = lwd)
+    legend("topright", c("Model", "Data"), pch = c(19, 124), lwd = c(2, NA), col = c(col, 1), bty = "n")
+  }
+  
+  ## draw plots
+  if(n > 1L) par(mfrow = n2mfrow(n))
+  for(i in 1L:n) rootogram1(x[x$group == i, ], ...)
+}
+
+rootogram.numeric <- function(object, fitted, breaks = NULL,
+                              start = NULL, width = NULL, xlab = NULL, ylab = NULL, main = NULL, ...)
+{
+  ## distribution to be fitted
+  dist <- fitted
+  if(!is.character(fitted)) fitted <- deparse(substitute(fitted))
+  if(substr(fitted, 1L, 1L) != "d") {
+    fitted <- match.arg(tolower(fitted),
+                        c("beta", "cauchy", "chi-squared", "chisquared", "exponential", "f",
+                          "gamma", "geometric", "log-normal", "lognormal", "logistic", "logseries", 
+                          "negative binomial", "negbin", "normal", "gaussian", "poisson", "t", "weibull"))
+    fitted <- switch(fitted,
+                     "chisquared" = "chi-squared",
+                     "lognormal" = "log-normal",
+                     "negbin" = "negative binomial",
+                     "gaussian" = "normal",
+                     fitted)
+    if(fitted == "logseries") {
+      dist <- function(x, logit, ...) dlogseries(x, plogis(logit), ...)
+      if(is.null(start)) start <- list(logit = 0)
+    } else {
+      if(is.character(dist)) dist <- fitted
+    }
+  }
+  
+  ## labels
+  if(is.null(xlab)) xlab <- deparse(substitute(object))
+  if(is.null(main)) main <- sprintf('fitdistr(%s, "%s")', deparse(substitute(object)), fitted)
+  
+
+  xfit <- suppressWarnings(try(fitdistr(object, dist, start = start), silent = TRUE))
+  if(!inherits(xfit, "fitdistr")) stop("could not obtain fitted distribution")
+  
+  ## fitted probability distribution function
+  pdist <- switch(fitted,
+                  "beta" = pbeta,
+                  "cauchy" = pcauchy, 
+                  "chi-squared" = pchisq,
+                  "exponential" = pexp,
+                  "f" = pf, 
+                  "gamma" = pgamma,
+                  "geometric" = pgeom,
+                  "log-normal" = plnorm, 
+                  "logistic" = plogis,
+                  "negative binomial" = pnbinom, 
+                  "normal" = pnorm,
+                  "poisson" = ppois,
+                  "t" = function(x, m, s, df) pt((x - m)/s, df),
+                  "weibull" = pweibull, 
+                  paste("p", substr(fitted, 2L, nchar(fitted)), sep = ""))
+  if(fitted == "logseries") pdist <- function(x, logit, ...) plogseries(x, plogis(logit), ...)
+  if(is.character(pdist)) pdist <- try(get(pdist), silent = TRUE)
+  if(!is.function(pdist)) stop("invalid specification of fitted distribution")
+  
+  ## second argument should be the full parameter vector
+  f <- formals(pdist)
+  args <- names(f)
+  m <- match(names(xfit$estimate), args)
+  formals(pdist) <- c(f[c(1, m)], f[-c(1, m)])
+  pfun <- function(x, parm, ...) pdist(x, parm, ...)
+  l <- length(xfit$estimate)
+  if(l > 1L) {
+    body(pfun) <- parse(text = paste("pdist(x, ", paste("parm[", 1L:l, "]", collapse = ", "), ", ...)"))
+  }
+  
+  ## different default breaks for discrete distributions
+  if(is.null(breaks)) {
+    if(tolower(fitted) %in% c("geometric", "negative binomial", "poisson", "binomial", "logseries")) {
+      breaks <- (if(fitted == "logseries") 0L else -1L):max(object) + 0.5
+      if(is.null(width)) width <- 0.9
+    } else {
+      breaks <- "Sturges"
+    }
+  }
+  
+  ## observed and expected frequencies
+  xhist <- hist(object, plot = FALSE, breaks = breaks)
+  expctd <- xfit$n * (pfun(tail(xhist$breaks, -1L), xfit$estimate) -
+                        pfun(head(xhist$breaks, -1L), xfit$estimate))
+  
+  ## call base rootogram function
+  plot.c.model.default(xhist$counts, expctd, breaks = xhist$breaks,
+                    xlab = xlab, main = main, width = width, ...)
+}
+
+rootogram.zeroinfl <- rootogram.hurdle <- function(object, newdata = NULL,
+                                                   max = NULL, xlab = NULL, main = NULL, width = 0.9, ...)
+{
+  ## observed response
+  mt <- terms(object)
+  mf <- if(is.null(newdata)) {
+    model.frame(object)
+  } else {
+    model.frame(mt, newdata, na.action = na.omit)
+  }
+  y <- model.response(mf)
+  w <- model.weights(mf)
+  if(is.null(w)) w <- rep(1, NROW(y))
+  
+  ## observed and expected frequencies
+  max0 <- if(is.null(max)) max(1.5 * max(y[w > 0]), 20L) else max  
+  obsrvd <- as.vector(xtabs(w ~ factor(y, levels = 0L:max0)))
+  expctd <- if(is.null(newdata)) {
+    colSums(predict(object, type = "prob", at = 0L:max0) * w)
+  } else {
+    colSums(predict(object, newdata = newdata, type = "prob", at = 0L:max0, na.action = na.omit) * w)
+  }
+  
+  ## try to guess a good maximum
+  if(is.null(max)) {
+    max <- if(all(expctd >= 1L)) max0 else max(ceiling(mean(y)), min(which(expctd < 1L)) - 1L)
+    max <- min(max, length(expctd) - 1L)
+  }
+  
+  ## observed and expected frequencies
+  obsrvd <- obsrvd[1L:(max + 1L)]
+  expctd <- expctd[1L:(max + 1L)]
+  
+  if(is.null(xlab)) xlab <- as.character(attr(mt, "variables"))[2L]
+  if(is.null(main)) main <- deparse(substitute(object))
+  plot.c.model.default(obsrvd, expctd, breaks = -1L:max + 0.5,
+                    xlab = xlab, main = main, width = width, ...)  
+}
+
+rootogram.zerotrunc <- function(object, newdata = NULL,
+                                max = NULL, xlab = NULL, main = NULL, width = 0.9, ...)
+{
+  ## observed response
+  mt <- terms(object)
+  mf <- if(is.null(newdata)) {
+    model.frame(object)
+  } else {
+    model.frame(mt, newdata, na.action = na.omit)
+  }
+  y <- model.response(mf)
+  w <- model.weights(mf)
+  if(is.null(w)) w <- rep(1, NROW(y))
+  
+  ## observed and expected frequencies
+  max0 <- if(is.null(max)) max(1.5 * max(y[w > 0]), 20L) else max  
+  obsrvd <- as.vector(xtabs(w ~ factor(y, levels = 1L:max0)))
+  expctd <- if(is.null(newdata)) {
+    colSums(predict(object, type = "prob", at = 1L:max0) * w)
+  } else {
+    colSums(predict(object, newdata = newdata, type = "prob", at = 1L:max0, na.action = na.omit) * w)
+  }
+  
+  ## try to guess a good maximum
+  if(is.null(max)) {
+    max <- if(all(expctd >= 1L)) max0 else max(ceiling(mean(y)), min(which(expctd < 1L)))
+    max <- min(max, length(expctd))
+  }
+  
+  ## observed and expected frequencies
+  obsrvd <- obsrvd[1L:max]
+  expctd <- expctd[1L:max]
+  
+  if(is.null(xlab)) xlab <- as.character(attr(mt, "variables"))[2L]
+  if(is.null(main)) main <- deparse(substitute(object))
+  plot.c.model.default(obsrvd, expctd, breaks = 0L:max + 0.5,
+                    xlab = xlab, main = main, width = width, ...)  
+}
+
+rootogram.glm <- function(object, newdata = NULL, breaks = NULL,
+                          max = NULL, xlab = NULL, main = NULL, width = NULL, ...) 
+{
+  family <- substr(family(object)$family, 1L, 17L)
+  if(!(family %in% c("negbin", "Negative Binomial", "poisson", "binomial", "gaussian"))) {
+    stop("family currently not supported")
+  }
+  
+  ## observed response
+  mt <- terms(object)
+  mf <- if(is.null(newdata)) {
+    model.frame(object)
+  } else {
+    model.frame(mt, newdata, na.action = na.omit)
+  }
+  y <- model.response(mf)
+  w <- model.weights(mf)
+  if(is.null(w)) w <- rep(1, NROW(y))
+  mu <- predict(object, newdata = newdata, type = "response", na.action = na.omit)
+  
+  if(family == "gaussian") {
+    ## estimated standard deviation (ML)
+    s <- sqrt(weighted.mean(residuals(object)^2, w))
+    
+    ## breaks
+    if(is.null(breaks)) breaks <- "Sturges"
+    breaks <- hist(y[w > 0], plot = FALSE, breaks = breaks)$breaks
+    obsrvd <- as.vector(xtabs(w ~ cut(y, breaks, include.lowest = TRUE)))
+    
+    ## expected frequencies
+    p <- matrix(NA, nrow = length(y), ncol = length(breaks) - 1L)
+    for(i in 1L:ncol(p)) p[, i] <- pnorm(breaks[i + 1L], mean = mu, sd = s) -
+      pnorm(breaks[i], mean = mu, sd = s)
+    expctd <- colSums(p * w)
+  } else if(family == "binomial") {
+    ## successes and failures
+    if(NCOL(y) < 2L) y <- cbind(y, 1L - y)
+    
+    ## number of attempts
+    size <- unique(rowSums(y))
+    if(length(size) > 1L) stop("rootogram only applicable to binomial distributions with same size")
+    at <- 0L:size
+    breaks <- -1L:size + 0.5
+    
+    ## observed and expected
+    obsrvd <- as.vector(xtabs(w ~ factor(y[, 1L], levels = at)))
+    p <- matrix(NA, length(mu), length(at))
+    for(i in at) p[, i + 1L] <- dbinom(i, prob = mu, size = size)
+    expctd <- colSums(p * w)
+  } else {
+    ## observed frequencies
+    max0 <- if(is.null(max)) max(1.5 * max(y[w > 0]), 20L) else max  
+    obsrvd <- as.vector(xtabs(w ~ factor(y, levels = 0L:max0)))
+    
+    ## expected frequencies
+    at <- 0L:max0
+    p <- matrix(NA, length(mu), length(at))
+    if(family == "poisson") {
+      for(i in at) p[, i + 1L] <- dpois(i, lambda = mu)
+    } else {
+      theta <- object$theta
+      if(is.null(theta)) theta <- get(".Theta", environment(family(object)$variance))
+      for(i in at) p[, i + 1L] <- dnbinom(i, mu = mu, size = theta)
+    }
+    expctd <- colSums(p * w)
+    
+    ## try to guess a good maximum
+    if(is.null(max)) {
+      max <- if(all(expctd >= 1L)) max0 else max(ceiling(mean(y)), min(which(expctd < 1L)) - 1L)
+      max <- min(max, length(expctd) - 1L)
+    }
+    breaks <- -1L:max + 0.5
+    
+    ## observed and expected frequencies
+    obsrvd <- obsrvd[1L:(max + 1L)]
+    expctd <- expctd[1L:(max + 1L)]
+  }
+  
+  if(is.null(xlab)) xlab <- as.character(attr(mt, "variables"))[2L]
+  if(is.null(main)) main <- deparse(substitute(object))
+  plot.c.model.default(obsrvd, expctd, breaks = breaks,
+                    xlab = xlab, main = main,
+                    width = if(family == "gaussian") 1 else width, ...)  
+}
+
+
+
+rootogram.gam <- function(object, newdata = NULL, breaks = NULL,
+                          max = NULL, xlab = NULL, main = NULL, width = NULL, ...) 
+{
+  family <- substr(family(object)$family, 1L, 17L)
+  if(!(family %in% c("Negative Binomial", "poisson", "binomial", "gaussian"))) {
+    stop("family currently not supported")
+  }
+  
+  ## observed response
+  mt <- terms(object)
+  mf <- if(is.null(newdata)) {
+    model.frame(object)
+  } else {
+    model.frame(mt, newdata, na.action = na.omit)
+  }
+  y <- model.response(mf)
+  mu <- predict(object, newdata = object$model, type = "response", na.action = na.omit)
+  
+  if(family == "gaussian") {
+    ## estimated standard deviation (ML)
+    s <- sqrt(mean(residuals(object)^2))
+    
+    ## breaks
+    if(is.null(breaks)) breaks <- "Sturges"
+    yhist <- hist(y, plot = FALSE, breaks = breaks)
+    breaks <- yhist$breaks
+    obsrvd <- yhist$count
+    
+    ## expected frequencies
+    p <- matrix(NA, nrow = length(y), ncol = length(breaks) - 1L)
+    for(i in 1L:ncol(p)) p[, i] <- pnorm(yhist$breaks[i + 1L], mean = mu, sd = s) -
+      pnorm(yhist$breaks[i], mean = mu, sd = s)
+    expctd <- colSums(p)
+  } else if(family == "binomial") {
+    ## successes and failures
+    if(NCOL(y) < 2L) y <- cbind(y, 1L - y)
+    
+    ## number of attempts
+    size <- unique(rowSums(y))
+    if(length(size) > 1L) stop("rootogram only applicable to binomial distributions with same size")
+    at <- 0L:size
+    breaks <- -1L:size + 0.5
+    
+    ## observed and expected
+    obsrvd <- table(factor(y[, 1L], levels = at))
+    p <- matrix(NA, length(mu), length(at))
+    for(i in at) p[, i + 1L] <- dbinom(i, prob = mu, size = size)
+    expctd <- colSums(p)
+  } else {
+    ## observed frequencies
+    max0 <- if(is.null(max)) max(1.5 * max(y), 20L) else max  
+    obsrvd <- table(factor(y, levels = 0L:max0))
+    
+    ## expected frequencies
+    at <- 0L:max0
+    p <- matrix(NA, length(mu), length(at))
+    if(family == "poisson") {
+      for(i in at) p[, i + 1L] <- dpois(i, lambda = mu)
+    } else {
+      theta <- object$theta
+      if(is.null(theta)) {
+        theta <- if (inherits(family(object), "extended.family")) { # family = nb
+          ## for nb, theta is on log scale; transform
+          family(object)$getTheta(trans = TRUE)
+        } else {                                                    # family = negbin
+          family(object)$getTheta()
+        }
+      }
+      for(i in at) p[, i + 1L] <- dnbinom(i, mu = mu, size = theta)
+    }
+    expctd <- colSums(p)
+    
+    ## try to guess a good maximum
+    if(is.null(max)) {
+      max <- if(all(expctd >= 1L)) max0 else max(ceiling(mean(y)), min(which(expctd < 1L)) - 1L)
+      max <- min(max, length(expctd) - 1L)
+    }
+    breaks <- -1L:max + 0.5
+    
+    ## observed and expected frequencies
+    obsrvd <- obsrvd[1L:(max + 1L)]
+    expctd <- expctd[1L:(max + 1L)]
+  }
+  
+  if(is.null(xlab)) xlab <- as.character(attr(mt, "variables"))[2L]
+  if(is.null(main)) main <- deparse(substitute(object))
+  plot.c.model.default(obsrvd, expctd, breaks = breaks,
+                    xlab = xlab, main = main,
+                    width = if(family == "gaussian") 1 else width, ...)  
+}                           
+ 
+#===========================================================================================================================
+                       
+zzz <- function(...){
+
+m <- as.character(substitute(...()))   
+  
+z <- function(fit){
+  
+mu <- predict(fit, type = "response")
+
+if(inherits(fit, "glm") && fit$family[[1]] == "poisson") exptd <- round(sum(dpois(x = 0, lambda = mu)))
+
+if(inherits(fit, "glm") && fit$family[[1]] == "binomial") exptd <- round(sum(dbinom(x = 0, size = sum(fit$model[1][1,]), prob = mu)))
+
+if(class(fit) %in% c("zeroinfl", "hurdle")) exptd <- round(sum(predict(fit, type = "prob")[,1]))
+
+obs <- sum(fit$y < 1)
+
+data.frame(obs.zeros = obs, pred.zeros = exptd)
+  
+ }
+
+output <- lapply(list(...), z)
+
+for(i in 1:length(m)) rownames(output[[i]]) <- m[i]
+
+return(output)
+}
+
+#===========================================================================================================================
+                       
+zero.count <- function(...){
+  
+  m <- as.character(substitute(...()))   
+  
+  z <- function(fit){
+    
+    z <-  plot.c.model(fit, plot = FALSE)
+    
+    obs <- z$observed[z$x == 0]
+    exptd <- round(z$expected[z$x == 0])
+    
+    data.frame(obs.zeros = obs, pred.zeros = exptd)
+    
+  }
+  
+  output <- lapply(list(...), z)
+  
+  for(i in 1:length(m)) rownames(output[[i]]) <- m[i]
+  
+  return(output)
+}                         
+                       
+                       
+#===========================================================================================================================
+                       
+                       
+plot.c.fit <- function(..., main = TRUE, max = NULL, zero = FALSE, scale = "raw"){
+  
+  m <-list(...)
+  L <- length(m)
+  
+  graphics.off()
+  org.par <- par(no.readonly = TRUE)
+  on.exit(par(org.par))
+  
+  if(L > 1L) { par(mfrow = n2mfrow(L)) ; set.margin2() }
+  lab <- as.character(substitute(...()))
+  
+  if(!zero) {
+    
+    invisible(lapply(1:L, function(i) 
+      plot.c.model(m[[i]], width = 0, main = if(main) lab[i] else NA, max = max, scale = scale, type = "b")) )
+  }
+  else {
+    
+    zs <- zero.count(...)
+    
+    for(i in 1:L){
+      z <- as.numeric(zs[[i]])
+      r <- range(z)
+      plot(0:1, z, type = "h", lend = 1, lwd = 8, col = c(2, 4), xaxt = "n", xlab = "Zero Outcome", ylab = "Frequency", xlim = c(-1.5, 2.5), ylim = c(r[1], r[2]*1.1) )
+      axis(1, at = 0:1, labels = c("Obs.0s", "Pred.0s"), font = 2, mgp = c(2, .3, 0))
+      text(0:1, z, z, col = c(2, 4), pos = 3, xpd = NA)
+    }
+  }
+}
+                      
+
+#===========================================================================================================================
+                 
+normalize <- function(x) 
+{
+  x <- x - min(x)
+  x/max(x)
+}                 
+
+                   
+#===========================================================================================================================
+                   
+                   
+dens2freq <- function(dens.obj){
+  
+  if(class(dens.obj)[1] != "density") stop("'dens.obj' must be a 'density' object.", call. = FALSE)
+  
+  count <- eval(parse(text = as.character(dens.obj$call[2])))
+  
+  if(!(all(is.whole(count)))) { message("warning: Non-integer (i.e., count) vector detected."); count <- round(count)}
+  
+  xout <- as.numeric(names(table(count)))
+  
+  approx(dens.obj$x, dens.obj$y * length(count), xout = xout)
+
+}                  
+                   
+#===========================================================================================================================
+                   
+                   
+ get.f.ci <- Vectorize(function(pov, N, design = 2 * 2, n.level = 2, n.pred = NULL, n.covar = 0, conf.level = .95){
+  
+  round(uniroot(function(x){
+    N - plan.f.ci(pov = pov, width = x, design = design, n.level = n.level, n.pred = n.pred, n.covar = n.covar, conf.level = conf.level)$to
+  }, c(.1, .35), extendInt = "yes")[[1]], 3)
+  
+})  
+                
+#===========================================================================================================================
+                   
+get.t.ci <- Vectorize(function(d, n1, n2 = NA, conf.level = .95){
+   
+n <- min(n1, n2)  
+  
+k <- if(!is.na(n2)) max(n1, n2) / n else 1
+  
+round(uniroot(function(x){
+  n - as.numeric(plan.t.ci(d = d, conf.level = conf.level, width = x, paired = if(is.na(n2)) T else F, base.rate = k)$n1)
+  }, c(1e-2, 1), extendInt = "yes")[[1]], 3)
+  
+})      
+      
+#===========================================================================================================================      
+      
+CI.d <- function(d, n1, n2 = NA, conf.level = .95, CI){
+  
+  min.d <- min(qcohen(1e-4, CI[1], n1, n2), qcohen(1e-4, CI[2], n1, n2 ))
+  max.d <- max(qcohen(.9999, CI[1], n1, n2), qcohen(.9999, CI[2], n1, n2))
+  
+  ylim <- c(0, max(dcohen(seq(min.d, max.d, l = 5e2), CI[1], n1, n2), dcohen(seq(min.d, max.d, l = 5e2), CI[2], n1, n2), na.rm = TRUE))
+  
+  L <- curve( dcohen(x, CI[1], n1, n2), min.d, max.d, n = 5e2, col = 4, lwd = 2, xpd = TRUE, ylab = "Density", xlab = "Cohen's d", font.lab = 2, mgp = c(1.5, .5, 0), ylim = ylim)
+  U <- curve( dcohen(x, CI[2], n1, n2), n = 5e2, col = 2, add = TRUE, lwd = 2, xpd = TRUE)
+  lines(CI, c(0, 0), lend = 1, lwd = 4) 
+  abline(v = c(CI[1], CI[2], d), col = c(4, 2, 1), lty = 2 ) ; points(d, 0, pch = 21, bg = "cyan", col = "magenta", cex = 2)
+  text(CI, c(max(L$y)/2, max(U$y)/2), round(CI, 3) , srt = 90, pos = 3, col = c(4, 2), font = 2)
+  
+}
+
+
+#===========================================================================================================================
+                   
+                   
+CI.peta <- function(peta, df1, df2, N, conf.level = .95, CI){
+  
+  min.p <- min(qpeta(1e-5, df1, df2, CI[1], N), qpeta(1e-5, df1, df2, CI[2], N))
+  max.p <- max(qpeta(.99999, df1, df2, CI[1], N), qpeta(.99999, df1, df2, CI[2], N))
+  
+  ylim <- c(0, max(dpeta(seq(0, 1, l = 5e2), df1, df2, CI[1], N), dpeta(seq(0, 1, l = 5e2), df1, df2, CI[2], N), na.rm = TRUE))
+  
+  L <- curve( dpeta(x, df1, df2, CI[1], N), min.p, max.p, n = 5e2, col = 4, lwd = 2, xpd = TRUE, ylab = "Density", xlab = bquote(eta[p]^2), font.lab = 2, mgp = c(1.8, .5, 0), ylim = ylim)
+  U <- curve( dpeta(x, df1, df2, CI[2], N), n = 5e2, col = 2, add = TRUE, lwd = 2, xpd = TRUE)
+  lines(CI, c(0, 0), lend = 1, lwd = 4) 
+  abline(v = c(CI[1], CI[2], peta), col = c(4, 2, 1), lty = 2 ); points(peta, 0, pch = 21, bg = "cyan", col = "magenta", cex = 2)
+  text(CI, c(max(L$y)/2, max(U$y)/2), round(CI, 3) , srt = 90, pos = 3, col = c(4, 2), font = 2)
+  
+}
+
+
+#===========================================================================================================================
+                   
+                   
+CI.R2 <- function(R2, df1, df2, N, conf.level = .95, CI){
+  
+  min.r <- min(qpeta(1e-5, df1, df2, CI[1], N), qpeta(1e-5, df1, df2, CI[2], N))
+  max.r <- max(qpeta(.99999, df1, df2, CI[1], N), qpeta(.99999, df1, df2, CI[2], N))
+  
+  ylim <- c(0, max(dpeta(seq(0, 1, l = 5e2), df1, df2, CI[1], N), dpeta(seq(0, 1, l = 5e2), df1, df2, CI[2], N), na.rm = TRUE))
+  
+  L <- curve( dpeta(x, df1, df2, CI[1], N), min.r, max.r, n = 5e2, col = 4, lwd = 2, xpd = TRUE, ylab = "Density", xlab = bquote(R^2), font.lab = 2, mgp = c(1.75, .5, 0), ylim = ylim)
+  U <- curve( dpeta(x, df1, df2, CI[2], N), n = 5e2, col = 2, add = TRUE, lwd = 2, xpd = TRUE)
+  lines(CI, c(0, 0), lend = 1, lwd = 4)
+  abline(v = c(CI[1], CI[2], R2), col = c(4, 2, 1), lty = 2 ) ; points(R2, 0, pch = 21, bg = "cyan", col = "magenta", cex = 2)
+  text(CI, c(max(L$y)/2, max(U$y)/2), round(CI, 3) , srt = 90, pos = 3, col = c(4, 2), font = 2)
+}                       
+                   
+
+#===========================================================================================================================
+                                 
+                   
+R2.ci <- function(R2, n.pred, N, f = NA, df1 = NA, df2 = NA, conf.level = .95, digits = 20, show = FALSE){ 
+  
+  if(is.na(df1)) df1 <- n.pred 
+  if(missing(n.pred) & df1) n.pred <- df1
+  if(is.na(df2)) df2 <- N - n.pred - 1
+  if(missing(N)) N <- df1 + df2 + 1  
+  if(missing(df2) & N) df2 <- N - df1 - 1
+  
+  a <- if(!missing(R2)){ peta.ci(peta = R2, df1 = df1, df2 = df2, N = N, conf.level = conf.level, digits = digits)
+  } else { peta.ci(f = f, df1 = df1, df2 = df2, N = N, conf.level = conf.level, digits = digits) }
+  
+  names(a)[1] <- "R2"
+  
+  if(show){
+    
+    r <- nrow(a)
+    graphics.off()
+    original.par = par(no.readonly = TRUE)
+    on.exit(par(original.par))
+    if(r > 1) { par(mfrow = n2mfrow(r)) ; set.margin2() }
+    
+    I <- eq(a$R2, df1, df2, N, conf.level)
+    
+    R2 <- I[[1]] ; df1 <- I[[2]] ; df2 <- I[[3]]; N <- I[[4]] ; conf.level <- I[[5]]
+    
+    for(i in 1:r) CI.R2(R2 = R2[i], df1 = df1[i], df2 = df2[i], N = N[i], conf.level = conf.level[i], CI = c(a$lower[i], a$upper[i]))
+    
+  }
+  
+  return(a)
+}
+
+#===========================================================================================================================
+                   
+
+peta.ci <- function(peta, f = NA, df1, df2, N, conf.level = .95, digits = 1e2, show = FALSE)
+{
+  UseMethod("peta.ci")
+} 
+
+peta.ci.default <- function(peta, f = NA, df1, df2, N, conf.level = .95, digits = 1e2, show = FALSE){
+  
+  ci <- Vectorize(function(peta, f, N, df1, df2, conf.level){
+    
+    q <- ifelse(is.na(f), peta2F(peta, df1, df2), f) 
+    
+    alpha <- (1 - conf.level)/2
+    
+    u <- function (ncp, alpha, q, df1, df2) {
+      suppressWarnings(pf(q = q, df1 = df1, df2 = df2, ncp, lower.tail = FALSE)) - alpha
+    }
+    
+    g <- try(uniroot(u, c(0, 1e7), alpha = alpha, q = q, df1 = df1, df2 = df2, extendInt = "yes")[[1]], silent = TRUE)
+    if(inherits(g, "try-error")) g <- 0
+    h <- try(uniroot(u, c(0, 1e7), alpha = 1-alpha, q = q, df1 = df1, df2 = df2, extendInt = "yes")[[1]], silent = TRUE)
+    if(inherits(h, "try-error")) h <- 0
+    I <- c(g, h)
+    
+    I <- I / (I + N)
+    
+    P.eta.sq <- if(is.na(f)) peta else F2peta(f, df1, df2)
+    
+    return(c(P.eta.sq = P.eta.sq, lower = I[1], upper = I[2], conf.level = conf.level, ncp = peta2ncp(P.eta.sq, N), F.value = q))
+  })
+  
+  peta <- if(missing(peta)) NA else peta
+  
+ a <- round(data.frame(t(ci(peta = peta, f = f, N = N, df1 = df1, df2 = df2, conf.level = conf.level))), digits = digits)
+ 
+ if(show){
+   
+   r <- nrow(a)
+   graphics.off()
+   original.par = par(no.readonly = TRUE)
+   on.exit(par(original.par))
+   if(r > 1) { par(mfrow = n2mfrow(r)) ; set.margin2() }
+   
+   I <- eq(a$P.eta.sq, df1, df2, N, conf.level)
+   
+   peta <- I[[1]] ; df1 <- I[[2]] ; df2 <- I[[3]]; N <- I[[4]] ; conf.level <- I[[5]]
+   
+   for(i in 1:r) CI.peta(peta = peta[i], df1 = df1[i], df2 = df2[i], N = N[i], conf.level = conf.level[i], CI = c(a$lower[i], a$upper[i]))
+   
+ }
+ 
+ return(a)
+ 
+}
+
+#===========================================================================================================================
+                   
+                   
+d.ci <- function(d, t = NA, n1, n2 = NA, conf.level = .95, digits = 1e2, show = FALSE)
+{
+  UseMethod("d.ci")
+}
+
+d.ci.default <- function(d, t = NA, n1, n2 = NA, conf.level = .95, digits = 1e2, show = FALSE){
+  
+  ci <- Vectorize(function(d, t, n1, n2, conf.level){
+    
+    options(warn = -1)  
+    alpha = (1 - conf.level)/2
+    N = ifelse(is.na(n2), n1, (n1 * n2)/(n1 + n2))
+    df = ifelse(is.na(n2), n1 - 1, (n1 + n2) - 2)
+    d.SE = 1/sqrt(N)
+    q = ifelse(is.na(t), d/d.SE, t)
+    
+    f <- function(ncp, alpha, q, df){
+      alpha - suppressWarnings(pt(q, df, ncp, lower.tail = FALSE))
+    }
+    
+    CI <- sapply(c(alpha, 1-alpha),
+                 function(x) uniroot(f, interval = c(-1e7, 1e7), alpha = x, q = q, df = df, extendInt = "yes")[[1]]*d.SE)
+    
+    Cohen.d = ifelse(is.na(t), d, t*d.SE)
+    
+    return(c(Cohen.d = Cohen.d, lower = CI[1], upper = CI[2], conf.level = conf.level, ncp = q))
+  })
+  
+  d <- if(missing(d)) NA else d
+  
+  a <- round(data.frame(t(ci(d = d, t = t, n1 = n1, n2 = n2, conf.level = conf.level))), digits = digits)
+  
+  if(show){
+    
+    r <- nrow(a)
+    graphics.off()
+    original.par = par(no.readonly = TRUE)
+    on.exit(par(original.par))
+    if(r > 1) { par(mfrow = n2mfrow(r)) ; set.margin2() }
+    
+    I <- eq(a$Cohen.d, n1, n2, conf.level)
+    
+    d <- I[[1]] ; n1 <- I[[2]] ; n2 <- I[[3]]; conf.level <- I[[4]]
+    
+    for(i in 1:r) CI.d(d = d[i], n1 = n1[i], n2 = n2[i], conf.level = conf.level[i], CI = c(a$lower[i], a$upper[i]))
+    
+  }
+  
+  return(a)
+  
+}                               
+                   
+                   
+#===========================================================================================================================
+                                        
+need <- c("rstanarm") #, "pscl", "glmmTMB")  #, "arrangements")
 have <- need %in% rownames(installed.packages())
 if(any(!have)){ install.packages( need[!have] ) }
  
 options(warn = -1)
 suppressMessages({ 
     library("rstanarm")
-   # library("arrangements")
-   # library("gsl")
+  #  library("pscl")
+  #  library("glmmTMB")
+  # library("arrangements")
 })
                      
