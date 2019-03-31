@@ -8019,15 +8019,15 @@ d.ci.default <- function(d, t = NA, n1, n2 = NA, conf.level = .95, digits = 1e2,
                    
 #===========================================================================================================================
                                         
-need <- c("rstanarm") #, "pscl", "glmmTMB")  #, "arrangements")
-have <- need %in% rownames(installed.packages())
-if(any(!have)){ install.packages( need[!have] ) }
+# need <- c("rstanarm") #, "pscl", "glmmTMB")  #, "arrangements")
+# have <- need %in% rownames(installed.packages())
+# if(any(!have)){ install.packages( need[!have] ) }
  
-options(warn = -1)
-suppressMessages({ 
-    library("rstanarm")
+# options(warn = -1)
+# suppressMessages({ 
+#    library("rstanarm")
   #  library("pscl")
   #  library("glmmTMB")
-  # library("arrangements")
+  #  library("arrangements")
 })
                      
