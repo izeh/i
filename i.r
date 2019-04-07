@@ -1,6 +1,5 @@
 
 
-
 #==================================================================================================================
 
 HDI <- function(fun, lower = 0, upper = 1, level = .95, eps = 1e-3)
@@ -4910,12 +4909,15 @@ plan.t.ci.default <- function(d, t = NA, n1, n2 = NA, conf.level = .95, width = 
   if(is.na(width)) width <- d.width(d = d, t = t, n1 = n1, n2 = n2, conf.level = conf.level)
   if(expect) assure <- .5
   
-  fac <- if(increase.by != "0%" & reduce.by == "0%") { 1 + as.numeric(substr(increase.by, 1, nchar(increase.by)-1))/ 1e2 
-  } else if(reduce.by != "0%" & increase.by == "0%") { 1 - (as.numeric(substr(reduce.by, 1, nchar(reduce.by)-1))/ 1e2) 
+  inc <- if(is.character(increase.by)) as.numeric(substr(increase.by, 1, nchar(increase.by)-1))/ 1e2 else increase.by
+  red <- if(is.character(reduce.by)) as.numeric(substr(reduce.by, 1, nchar(reduce.by)-1))/ 1e2 else reduce.by
+  
+  fac <- if(inc != 0 & red == 0) { 1 + inc
+  } else if(red != 0 & inc == 0) { 1 - red 
   } else { 1 }
   
   
-  if(fac <= 0 || increase.by == "0%" & fac > 1) fac <- 1
+  if(fac <= 0 || inc == 0 & fac > 1) fac <- 1
   
   width <- width * fac
   
@@ -4971,21 +4973,122 @@ plan.t.ci.default <- function(d, t = NA, n1, n2 = NA, conf.level = .95, width = 
                                                                                                                                                                                                           
 #===================================================================================================================================================
                                                                                                      
-                                                                                                     
-R2.ci <- function(R2, n.pred, N, f = NA, df1 = NA, df2 = NA, conf.level = .95, digits = 20){ 
+ 
+plan.f.ci <- function(pov, design = 2 * 2, n.level = 2, n.pred = NULL, n.covar = 0, conf.level = .95, width = NA, assure = .99, expect = FALSE, reduce.by = "0%", d = NA, lower, upper, increase.by = "0%", tol = 1e3)
+{
   
-  if(is.na(df1)) df1 <- n.pred 
-  if(missing(n.pred) & df1) n.pred <- df1
-  if(is.na(df2)) df2 <- N - n.pred - 1
-  if(missing(N)) N <- df1 + df2 + 1  
-  if(missing(df2) & N) df2 <- N - df1 - 1
+  UseMethod("plan.f.ci")
   
-  a <- if(!missing(R2)){ peta.ci(peta = R2, df1 = df1, df2 = df2, N = N, conf.level = conf.level, digits = digits)
-  } else { peta.ci(f = f, df1 = df1, df2 = df2, N = N, conf.level = conf.level, digits = digits) }
-  
-  names(a)[1] <- "R2"
-  a
 }
+
+plan.f.ci.default <- function(pov, design = 2 * 2, f = NA, n.level = 2, n.pred = NULL, n.covar = 0, conf.level = .95, width = NA, assure = .99, expect = FALSE, reduce.by = "0%", d = NA, lower, upper, increase.by = "0%", tol = 1e3){
+  
+  
+  if(any(conf.level >= 1) || any(conf.level <= 0) || any(assure >= 1) || any(assure <= 0)) stop("'conf.level' and 'assure' must be between '0' and '1'.", call. = FALSE)
+  if(expect) assure <- .5
+  regress <- if(!is.null(n.pred)) TRUE else FALSE
+  if(regress) n.level <- n.pred
+  if(!is.na(d)) { pov <- d2peta(d = d, n1 = 500, n2 = 500) ; n.level <- 2 ;
+  message("\nNote: For 'pairwise' comparisons, 'total.N' is for '2' groups.") }
+  if(!is.na(d)) { pov <- d2peta(d = d, n1 = 500, n2 = 500) ; n.level <- 2 }
+  if(!is.na(d) & is.na(width)) width <- d.width.meta(lower = lower, upper = upper)
+  if(!is.na(d) & width >= .3) width <- .3
+  if(!is.na(d) & pov <= .15) pov <- .15
+  
+  peta <- pov
+  
+  inc <- if(is.character(increase.by)) as.numeric(substr(increase.by, 1, nchar(increase.by)-1))/ 1e2 else increase.by
+  red <- if(is.character(reduce.by)) as.numeric(substr(reduce.by, 1, nchar(reduce.by)-1))/ 1e2 else reduce.by
+  
+  fac <- if(inc != 0 & red == 0) { 1 + inc
+  } else if(red != 0 & inc == 0) { 1 - red 
+  } else { 1 }
+  
+  
+  if(fac <= 0 || inc == 0 & fac > 1) fac <- 1
+  
+  width <- width * fac
+  
+  
+  G <- Vectorize(function(peta, conf.level, width, assure, design, n.level, n.covar, regress, expect){
+    
+    
+    n.f <- function(peta, conf.level, width, assure, design, n.level, n.covar, regress){
+      
+      alpha <- (1 - conf.level)/2
+      if(regress){ n.level <- n.level + 1 ; design <- n.level }
+      df1 <- n.level - 1
+      if(n.covar < 0) n.covar <- 0
+      options(warn = -1)
+      
+      f <- function(alpha, q, df1, df2, ncp){
+        alpha - suppressWarnings(pf(peta2F(peta, df1, df2), df1, df2, ncp, lower.tail = FALSE))
+      }
+      
+      pbase <- function(df2){      
+        
+        b <- sapply(c(alpha, 1 - alpha), function(x) 
+          tryCatch(uniroot(f, c(0, 1e7), alpha = x, q = q, df1 = df1, df2 = df2, extendInt = "yes")[[1]], error = function(e) NA))
+        if(any(is.na(b))) b <- c(1, tol)     
+        ncp2peta(b, df2 + design + n.covar)
+      }
+      
+      m <- function(df2, width){
+        abs(diff(pbase(df2))) - width
+      }
+      
+      df2 <- uniroot(m, c(0, 1e3), width = width, extendInt = "yes")
+      
+      
+      if(round(df2$f.root, 3) != 0) stop("\nImpossible planning: You may change your 'width'.", call. = FALSE)
+      
+      
+      df2 <- ceiling(df2[[1]])
+      
+      N <- ceiling(df2 + design + n.covar)
+      n.covar <- if(n.covar == 0) NA else n.covar
+      n.level <- if(regress) n.level-1 else n.level
+      design <- if(regress) n.level else design
+      df1 <- if(regress) n.level else df1
+      
+      list(peta = peta, total.N = N, width = width, n.level = n.level, conf.level = conf.level, assure = assure, df1 = df1, df2 = df2, design = design)
+    }
+    
+    n <- n.f(peta = peta, width = width, assure = assure, n.level = n.level, regress = regress, conf.level = conf.level, design = design, n.covar = n.covar)  
+    
+    peta <- exp.peta(pbase = n$peta, df1 = n$df1, df2 = n$df2, N = n$total.N)
+    
+    n <- n.f(peta = peta, width = width, assure = assure, n.level = n.level, regress = regress, conf.level = conf.level, design = design, n.covar = n.covar)
+    
+    peta.max <- root(pov = peta, df1 = n$df1, df2 = n$df2, N = n$total.N, conf.level = conf.level)$m
+    
+    a <- peta.ci(peta = peta, df1 = n$df1, df2 = n$df2, N = n$total.N, conf.level = 2*assure - 1)
+    
+    nLU <- sapply(c(a$lower, a$upper), function(x) n.f(peta = x, width = width, assure = assure, n.level = n.level, regress = regress, conf.level = conf.level, design = design, n.covar = n.covar)$total.N)
+    
+    NN1 <- max(nLU, na.rm = TRUE)
+    
+    b <- peta.ci(peta = peta.max, df1 = n$df1, df2 = n$df2, N = n$total.N, conf.level = 1 - assure)
+    
+    nLU <- sapply(c(b$lower, b$upper), function(x) n.f(peta = x, width = width, assure = assure, n.level = n.level, regress = regress, conf.level = conf.level, design = design, n.covar = n.covar)$total.N)
+    
+    NN2 <- max(nLU, na.rm = TRUE)
+    
+    NN3 <- if(!(peta.max %inn% c(a$lower, a$upper))) NN1 else max(NN1, NN2)
+    
+    max.w <- round(root(pov = peta, df1 = n$df1, N = NN3, df2 = NN3 - design - n.covar, conf.level = conf.level)$w, 3)
+    
+    return(c(peta = peta, total.N = NN3, width = width, n.level = n.level, design = design, conf.level = conf.level, max.width = max.w))
+    
+  })
+  
+  a <- data.frame(t(G(peta = peta, conf.level = conf.level, width = width, design = design, n.level = n.level, n.covar = n.covar, assure = assure, regress = regress, expect = expect)), regress = regress, assure = assure, row.names = NULL)
+  names(a)[4] <- if(regress) "n.pred" else "n.level"
+  names(a)[1] <- if(regress) "R2" else if(!is.na(d)) "d" else "peta"
+  a[, 1] <- if(is.na(d)) pov else d
+  a
+}                                                                                  
+                                                                                                                
                                                                                                      
 #=====================================================================================================================================================
                                                                                                      
@@ -5233,15 +5336,7 @@ d.width.meta <- Vectorize(function(lower, upper, n1 = 50, n2 = 50){
 #==========================================================================================================================================================================================================================                    
                     
 
-
-plan.f.ci <- function(pov, design = 2 * 2, n.level = 2, n.pred = NULL, n.covar = 0, conf.level = .95, width = NA, assure = .99, expect = FALSE, reduce.by = "0%", d = NA, lower, upper, increase.by = "0%", tol = 1e3)
-{
-  
-  UseMethod("plan.f.ci")
-  
-}
-
-plan.f.ci.default <- function(pov, design = 2 * 2, f = NA, n.level = 2, n.pred = NULL, n.covar = 0, conf.level = .95, width = NA, assure = .99, expect = FALSE, reduce.by = "0%", d = NA, lower, upper, increase.by = "0%", tol = 1e3){
+plan.f.cig <- function(pov, design = 2 * 2, f = NA, n.level = 2, n.pred = NULL, n.covar = 0, conf.level = .95, width = NA, assure = .99, expect = FALSE, reduce.by = "0%", d = NA, lower, upper, increase.by = "0%", tol = 1e3){
   
   
   if(any(conf.level >= 1) || any(conf.level <= 0) || any(assure >= 1) || any(assure <= 0)) stop("'conf.level' and 'assure' must be between '0' and '1'.", call. = FALSE)
@@ -5372,7 +5467,7 @@ root <- function(pov = .6, df1 = 3, df2 = 108, N = 100, conf.level = .95, show =
   
   if(show) curve(f, panel.f = abline(v = c(pov, est), h = f(pov), col = 2, lty = c(2, 1, 1)), ...) 
   
-  list(m = m, est = est)
+  list(m = m, est = est, w = f(m))
 }
 
 #=======================================================================================================================================================================================================================================
