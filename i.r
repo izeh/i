@@ -4943,7 +4943,7 @@ plan.t.ci.default <- function(d, t = NA, n1, n2 = NA, conf.level = .95, width = 
       
       df <- optimize(m, c(1, 1e7), width = width)
       
-      if(round(df$objective, 4) != 0) return(c(NaN, message("Warning: NaN produced. Are input values correct?")))
+      if(round(df$objective, 4) != 0) stop("Impossible planning: change input values.", call. = FALSE)
       
       n1 <- ceiling(if(paired) df[[1]] + 1 else (df[[1]] + 2)/(1 + k))
       n2 <- if(paired) NA else round(k * n1)
