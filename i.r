@@ -8219,7 +8219,7 @@ m
                   
 #===========================================================================================================================
    
-ave.dep <- function(d, n1, n2, r.mat, autoreg = FALSE, sig.level = .05, check = FALSE, r.check = NA, digits = 8){
+ave.dep <- function(d, n1, n2, r.mat = .54, autoreg = FALSE, sig.level = .05, check = FALSE, r.check = NA, digits = 8){
   
   G <- function(d, n1, n2, r.mat, autoreg, sig.level){
     
