@@ -8110,7 +8110,9 @@ d.ci.default <- function(d, t = NA, n1, n2 = NA, conf.level = .95, digits = 1e2,
   return(a)
   
 }                               
-                   
+ 
+#=========================================================================================================================                  
+                  
 inv <- function (X, tol = sqrt(.Machine$double.eps)) 
 {
   if (length(dim(X)) > 2L || !(is.numeric(X) || is.complex(X))) 
@@ -8138,6 +8140,116 @@ d <- p[[1]] ; weight <- p[[2]]
 as.numeric(crossprod(d, weight))/ sqrt(r*sum(weight)^2 + (1-r)*sum(weight^2))
 
 }     
+
+inv <- function (X, tol = sqrt(.Machine$double.eps)) 
+{
+  if (length(dim(X)) > 2L || !(is.numeric(X) || is.complex(X))) 
+    stop("'X' must be a numeric or complex matrix")
+  if (!is.matrix(X)) 
+    X <- as.matrix(X)
+  Xsvd <- svd(X)
+  if (is.complex(X)) 
+    Xsvd$u <- Conj(Xsvd$u)
+  Positive <- Xsvd$d > max(tol * Xsvd$d[1L], 0)
+  if (all(Positive)) 
+    Xsvd$v %*% (1/Xsvd$d * t(Xsvd$u))
+  else if (!any(Positive)) 
+    array(0, dim(X)[2L:1L])
+  else Xsvd$v[, Positive, drop = FALSE] %*% ((1/Xsvd$d[Positive]) * 
+       t(Xsvd$u[, Positive, drop = FALSE]))
+}
+
+#===========================================================================================================================
+        
+meta.var <- function(d, n1, n2) ((n1+n2)/(n1*n2)) + ((d^2) / (2*(n1+n2)) )
+meta.se <- function(d, n1, n2) sqrt( meta.var(d, n1, n2) )                  
+                  
+#===========================================================================================================================                  
+                  
+ave.drr <- function(d, r, weight = 1){
+  
+p <- eq(d, weight)
+d <- p[[1]] ; weight <- p[[2]]
+as.numeric(crossprod(d, weight)) / sqrt(r*sum(weight)^2 + (1-r)*sum(weight^2))
+
+}                  
+                  
+#===========================================================================================================================
+
+cov.d <- function(d, n1, n2, r.mat, no.names = FALSE, digits = 1e2){
+  
+  if(!is.matrix(r.mat)) stop("'r.mat' must be a matrix.", call. = FALSE)
+  
+  d <- as.vector(d)  
+  
+  D <- diag(meta.se(d, n1, n2))
+  
+  m <- D%*%r.mat%*%D
+  if(!no.names) rownames(m) <- colnames(m) <- paste0("d", 1:length(d))
+  
+  return(round(m, digits))
+}
+
+
+#===============================================================================================
+
+
+autoreg.d <- function(d, n1, n2, r = .5, cov = FALSE, no.names = FALSE, digits = 1e2){
+
+d <- as.vector(d)
+r <- as.vector(r)[1]     
+x <- diag(length(d)) 
+R <- round(r^abs(row(x)-col(x)), digits)
+
+covar <- cov.d(d, n1, n2, R, no.names, digits)
+
+if(cov) covar else R
+}
+
+
+#=========================================================================================================================
+                  
+cor.mat <- function(r, dim) { 
+  
+m <- diag(dim) 
+m[lower.tri(m)] <- r
+m[upper.tri(m)] <- t(m)[upper.tri(t(m))]
+m
+}
+                  
+#===========================================================================================================================
+   
+ave.dho <- function(d, n1, n2, r.mat, autoreg = FALSE, alpha = .05){
+  
+  d <- matrix(d)
+  
+  r <- if(length(r.mat) == 1 & !autoreg) cor.mat(r.mat, length(d)) 
+  else if(length(r.mat) == 1 & autoreg)  autoreg.d(d, n1, n2, r = r.mat)  
+  else if(length(r.mat) > 1 & is.matrix(r.mat) & all(dim(r.mat) == length(d))) r.mat  
+  else stop("Incorrect 'r.mat' detected.", call. = FALSE) 
+  
+  e <- matrix(rep(1, length(d)))
+  
+  A <- cov.d(d, n1, n2, r)
+  
+  w <- t((inv(A)%*%e) %*% inv((t(e)%*%inv(A)%*%e)))
+  rownames(w) <- "Ws:"
+  colnames(w) <- paste0("w", 1:length(d))
+  rownames(r) <- colnames(r) <- paste0("d", 1:length(d))
+    
+  se <- as.vector(sqrt(inv(t(e)%*%inv(A)%*%e)))
+  
+  M <- inv(A)-((inv(A)%*%e%*%t(e)%*%inv(A))%*%inv(diag(as.vector(t(e)%*%inv(A)%*%e), length(d), length(d))))
+  
+  Q <- as.vector(t(d)%*%M%*%d)
+  
+  p.value <- pchisq(Q, length(d)-1, lower.tail = FALSE)
+  
+  pool <- if(p.value > alpha) paste("YES (at", alpha, "sig.level).") else paste("NO (at", alpha, "sig.level).")
+    
+  list(pool = noquote(pool), Q.statistic = Q, p.value = p.value, ave.d = as.vector(w%*%d), 
+                 std.error = se, weights = w, cov.mat = A, r.mat = r)
+}                  
                   
 #===========================================================================================================================
                                         
