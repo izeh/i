@@ -8219,7 +8219,9 @@ m
                   
 #===========================================================================================================================
    
-ave.dho <- function(d, n1, n2, r.mat, autoreg = FALSE, alpha = .05){
+ave.dep <- function(d, n1, n2, r.mat, autoreg = FALSE, sig.level = .05, check = FALSE, digits = 8){
+
+G <- function(d, n1, n2, r.mat, autoreg, sig.level){
   
   d <- matrix(d)
   
@@ -8236,7 +8238,7 @@ ave.dho <- function(d, n1, n2, r.mat, autoreg = FALSE, alpha = .05){
   rownames(w) <- "Ws:"
   colnames(w) <- paste0("w", 1:length(d))
   rownames(r) <- colnames(r) <- paste0("d", 1:length(d))
-    
+  
   se <- as.vector(sqrt(inv(t(e)%*%inv(A)%*%e)))
   
   M <- inv(A)-((inv(A)%*%e%*%t(e)%*%inv(A))%*%inv(diag(as.vector(t(e)%*%inv(A)%*%e), length(d), length(d))))
@@ -8245,12 +8247,23 @@ ave.dho <- function(d, n1, n2, r.mat, autoreg = FALSE, alpha = .05){
   
   p.value <- pchisq(Q, length(d)-1, lower.tail = FALSE)
   
-  pool <- if(p.value > alpha) paste("YES (at", alpha, "sig.level).") else paste("NO (at", alpha, "sig.level).")
-    
-  list(pool = noquote(pool), Q.statistic = Q, p.value = p.value, ave.d = as.vector(w%*%d), 
-                 std.error = se, weights = w, cov.mat = A, r.mat = r)
+  ave.d <- as.vector(w%*%d)
+  
+  h <- round(c(se, Q, p.value, ave.d), digits)
+  se <- h[1] ; Q <- h[2] ; p.value <- h[3] ; ave.d <- h[4]
+  
+  pool <- paste0(if(p.value > sig.level) "YES" else "NO", " (alpha = ", sig.level, ")") #else paste("NO (at", sig.level, "alpha)")
+  
+  if(check) return(c(pool = pool, Q.statistic = Q, p.value = p.value, ave.d = ave.d, 
+                       std.error = se, autoreg = autoreg)) else
+  list(pool = noquote(pool), Q.statistic = Q, p.value = p.value, ave.d = ave.d, 
+       std.error = se, weights = w, cov.mat = A, r.mat = r)
 }                  
-                  
+
+if(check) { o <- t(data.frame(sapply(4:8*.1, function(x)G(d = d, n1 = n1, n2 = n2, r.mat = x, autoreg = autoreg, sig.level = sig.level)))) ; rownames(o) <- paste0("r(", 4:8*.1,"):") ; noquote(o)}
+else G(d = d, n1 = n1, n2 = n2, r.mat = r.mat, autoreg = autoreg, sig.level = sig.level)
+}
+                                     
 #===========================================================================================================================
                                         
 # need <- c("rstanarm") #, "pscl", "glmmTMB")  #, "arrangements")
