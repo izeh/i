@@ -1,6 +1,5 @@
 ## helper function:
-sdif <- function(n = NA, mpre = NA, mpos = NA, sdpre = NA, sdpos = NA, r = NA, t = NA, F1 = NA,
-                 sdp = NA){
+sdif <- function(n = NA, mpre = NA, mpos = NA, sdpre = NA, sdpos = NA, r = NA, t = NA, F1 = NA, sdp = NA){
   
   ifelse(!is.na(r) & !is.na(sdpre) & !is.na(sdpos), sqrt(sdpre^2+sdpos^2-2*r*sdpre*sdpos),
          ifelse(!is.na(n) & is.na(r) & !is.na(t) & !is.na(mpre) & !is.na(mpos), sqrt((n*(mpos - mpre)^2)/(ifelse(is.na(F1) & !is.na(t), t^2, ifelse(!is.na(F1) & is.na(t), F1, NA)))), 
@@ -13,7 +12,7 @@ d.prepos <- function(study.name = NA, group.name = NA, n = NA, mpre = NA, mpos =
   
   if(missing(control) || missing(post)) stop("'post' or/and 'control' missing.", call. = FALSE)  
   
-  d <- NA #ifelse(!is.na(t) & !missing(n), t2d(t, n), ifelse(!is.na(F1) & !missing(n), t2d(sqrt(F1), n), ifelse(!is.na(F1) & missing(n) & !is.na(df2), t2d(sqrt(F1), df2+2), NA)))
+  d <- NA
   mdif <- ifelse(!is.na(mpre) & !is.na(mpre), mpos - mpre, NA)
   sdif <- ifelse(is.na(sdif), sdif(sdpre = sdpre, sdpos = sdpos, t = t, r = r, n = n, mpos = mpos, mpre = mpre, F1 = F1, sdp = sdp), sdif)
   ifelse(!is.na(mdif) & is.na(d) & !is.na(sdif), d <- mdif/sdif, d <- NA) 
