@@ -17,11 +17,7 @@ d.prepos <- function(study.name = NA, group.name = NA, n = NA, mpre = NA, mpos =
   sdif <- ifelse(is.na(sdif), sdif(sdpre = sdpre, sdpos = sdpos, t = t, r = r, n = n, mpos = mpos, mpre = mpre, F1 = F1, sdp = sdp), sdif)
   ifelse(!is.na(mdif) & is.na(d) & !is.na(sdif), d <- mdif/sdif, d <- NA) 
   
-  out <- data.frame(d = d, n = n, sdif = sdif, post, control, ...)
-  
-  if(all(is.na(out$d))) stop("\ninsufficient info. to calculate effect size(s).", call. = FALSE)
-  
-  return(out)
+data.frame(d = d, n = n, sdif = sdif, post, control, ...)
 }
 ########################################## YOUR SUGGESTED SOLUTIONS: ###########################################################
 library(purrr)
