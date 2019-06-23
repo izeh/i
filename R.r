@@ -5,7 +5,6 @@ sdif <- function(n = NA, mpre = NA, mpos = NA, sdpre = NA, sdpos = NA, r = NA, t
   ifelse(!is.na(r) & !is.na(sdpre) & !is.na(sdpos), sqrt(sdpre^2+sdpos^2-2*r*sdpre*sdpos),
          ifelse(!is.na(n) & is.na(r) & !is.na(t) & !is.na(mpre) & !is.na(mpos), sqrt((n*(mpos - mpre)^2)/(ifelse(is.na(F1) & !is.na(t), t^2, ifelse(!is.na(F1) & is.na(t), F1, NA)))), 
                 ifelse(!is.na(r) & !is.na(sdp), sqrt(2*sdp^2*(1-r)), NA)))
-  
 }
 
 
@@ -49,7 +48,6 @@ d.prepos <- function(study.name = NA, group.name = NA, n = NA, mpre = NA, mpos =
   if(all(is.na(out$d))) stop("\ninsufficient info. to calculate effect size(s).", call. = FALSE)
   
   return(out)
-  
 }
 
 library(purrr)
@@ -64,6 +62,6 @@ args <- lapply(L, function(x) unclass(x[c(head(formalArgs(d.prepos), -1), dot.na
 g <- simplify2array(lapply(names(args[[1]]), function(i) 
   lapply(args, function(j) j[i])))
 
-do.call(Map, c(f = d.prepos, unname(split(g, col(g)))))        # Fails ##############
+do.call(Map, c(f = d.prepos, unname(split(g, col(g)))))        ## Fails <><><><><><><><><>
 
-unname(do.call(Map, c(f = d.prepos, purrr::transpose(args))))  # Works ##############
+unname(do.call(Map, c(f = d.prepos, purrr::transpose(args))))  ## Works <><><><><><><><><>
