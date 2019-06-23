@@ -50,6 +50,7 @@ d.prepos <- function(study.name = NA, group.name = NA, n = NA, mpre = NA, mpos =
   return(out)
 }
 
+########################################## YOUR SUGGESTED SOLUTIONS: ###########################################################
 library(purrr)
 D <- read.csv("https://raw.githubusercontent.com/izeh/i/master/k.csv", h = T)
 L <- split(D, D$study.name) ; L[[1]] <- NULL
