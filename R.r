@@ -7,7 +7,6 @@ sdif <- function(n = NA, mpre = NA, mpos = NA, sdpre = NA, sdpos = NA, r = NA, t
                 ifelse(!is.na(r) & !is.na(sdp), sqrt(2*sdp^2*(1-r)), NA)))
  }
 
-
 ## helper function2:
 rdif <- function(n = NA, mpre = NA, mpos = NA, sdpre = NA, sdpos = NA, t = NA, F1 = NA, sdif = NA, 
                  sdp = NA) {
