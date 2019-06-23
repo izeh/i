@@ -5,7 +5,7 @@ sdif <- function(n = NA, mpre = NA, mpos = NA, sdpre = NA, sdpos = NA, r = NA, t
   ifelse(!is.na(r) & !is.na(sdpre) & !is.na(sdpos), sqrt(sdpre^2+sdpos^2-2*r*sdpre*sdpos),
          ifelse(!is.na(n) & is.na(r) & !is.na(t) & !is.na(mpre) & !is.na(mpos), sqrt((n*(mpos - mpre)^2)/(ifelse(is.na(F1) & !is.na(t), t^2, ifelse(!is.na(F1) & is.na(t), F1, NA)))), 
                 ifelse(!is.na(r) & !is.na(sdp), sqrt(2*sdp^2*(1-r)), NA)))
-}
+ }
 
 
 ## helper function2:
@@ -17,27 +17,13 @@ rdif <- function(n = NA, mpre = NA, mpos = NA, sdpre = NA, sdpos = NA, t = NA, F
                                                                                                                          NA))
 }
 
-
-## helper function3:
-autoreg <- function(steps, r){
-  
-  steps <- if(length(steps) == 1) steps+1 else length(steps)+1
-  x <- diag(steps)
-  r <- data.frame(r^abs(row(x)-col(x)))
-  rownames(r) <- colnames(r) <- c("pre", paste0("post", 1:(steps-1)))
-  return(r)
-} 
-
-
 ## Actual function:
 d.prepos <- function(study.name = NA, group.name = NA, n = NA, mpre = NA, mpos = NA, sdpre = NA, sdpos = NA, r = NA, autoreg = FALSE, t = NA, sdif = NA, sdp = NA, F1 = NA, df2 = NA, post, control, ...) 
 {
   
   if(missing(control) || missing(post)) stop("'post' or/and 'control' missing.", call. = FALSE)  
   
-  r <- ifelse(!is.logical(post) & autoreg & !is.na(r), autoreg(max(post, na.rm = TRUE), r)[,1][-1][post], r)
-  
-  d <- ifelse(!is.na(t) & !missing(n), t2d(t, n), ifelse(!is.na(F1) & !missing(n), t2d(sqrt(F1), n), ifelse(!is.na(F1) & missing(n) & !is.na(df2), t2d(sqrt(F1), df2+2), NA)))
+  d <- NA
   mdif <- ifelse(!is.na(mpre) & !is.na(mpre), mpos - mpre, NA)
   sdif <- ifelse(is.na(sdif), sdif(sdpre = sdpre, sdpos = sdpos, t = t, r = r, n = n, mpos = mpos, mpre = mpre, F1 = F1, sdp = sdp), sdif)
   cor. <- ifelse(is.na(r), rdif(n = n, mpre = mpre, mpos = mpos, sdpre = sdpre, sdpos = sdpos, sdif = sdif, sdp = sdp), r)
@@ -49,7 +35,6 @@ d.prepos <- function(study.name = NA, group.name = NA, n = NA, mpre = NA, mpos =
   
   return(out)
 }
-
 ########################################## YOUR SUGGESTED SOLUTIONS: ###########################################################
 library(purrr)
 D <- read.csv("https://raw.githubusercontent.com/izeh/i/master/k.csv", h = T)
