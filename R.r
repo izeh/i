@@ -32,6 +32,6 @@ args <- lapply(L, function(x) unclass(x[c(head(formalArgs(d.prepos), -1), dot.na
 g <- simplify2array(lapply(names(args[[1]]), function(i) 
   lapply(args, function(j) j[i])))
 
-do.call(Map, c(f = d.prepos, unname(split(g, col(g)))))        ## Fails <><><><><><><><><>
+do.call(Map, c(f = d.prepos, unname(split(g, col(g)))))        # Fails <><><><><><><><><> ######@@@ :-(
 
-unname(do.call(Map, c(f = d.prepos, purrr::transpose(args))))  ## Works <><><><><><><><><>
+unname(do.call(Map, c(f = d.prepos, purrr::transpose(args))))  # Works <><><><><><><><><> ######@@@ :-)
